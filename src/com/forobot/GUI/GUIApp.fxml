@@ -1,0 +1,271 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.*?>
+<?import javafx.scene.text.*?>
+<?import javafx.scene.control.*?>
+<?import java.lang.*?>
+<?import javafx.scene.layout.*?>
+
+<TabPane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="325.0" prefWidth="597.0" tabClosingPolicy="UNAVAILABLE" xmlns="http://javafx.com/javafx/8" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.forobot.GUI.GUIController">
+  <tabs>
+    <Tab closable="false" text="Launch">
+      <content>
+        <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="236.0" prefWidth="600.0">
+               <children>
+                  <TilePane alignment="CENTER" layoutX="14.0" layoutY="14.0" prefHeight="257.0" prefWidth="536.0">
+                     <children>
+                        <Label alignment="CENTER" text="Here you can launch the bot">
+                           <font>
+                              <Font name="Tahoma" size="30.0" />
+                           </font>
+                        </Label>
+                        <Label text="Your channel name">
+                           <font>
+                              <Font name="Tahoma" size="18.0" />
+                           </font>
+                        </Label>
+                        <TextField fx:id="channelNameTextField" text="foreseer_">
+                           <font>
+                              <Font name="Tahoma" size="12.0" />
+                           </font>
+                        </TextField>
+                        <Label text="Status: ">
+                           <font>
+                              <Font name="Tahoma" size="18.0" />
+                           </font>
+                        </Label>
+                        <Label fx:id="statusLabel" alignment="CENTER" prefHeight="23.0" prefWidth="519.0" text="Waiting for the user to launch the bot" textAlignment="CENTER">
+                           <font>
+                              <Font name="Tahoma" size="16.0" />
+                           </font>
+                        </Label>
+                        <Button fx:id="launchButton" cancelButton="true" mnemonicParsing="false" onAction="#launchBot" text="Launch the bot">
+                           <font>
+                              <Font name="Tahoma Bold" size="18.0" />
+                           </font>
+                        </Button>
+                     </children>
+                  </TilePane>
+               </children></AnchorPane>
+      </content>
+    </Tab>
+      <Tab fx:id="optionsTab" closable="false" disable="true" text="Options">
+        <content>
+          <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="180.0" prefWidth="200.0">
+               <children>
+                  <GridPane prefHeight="105.0" prefWidth="819.0">
+                    <columnConstraints>
+                      <ColumnConstraints hgrow="SOMETIMES" maxWidth="241.0" minWidth="10.0" prefWidth="180.0" />
+                      <ColumnConstraints hgrow="SOMETIMES" maxWidth="407.0" minWidth="10.0" prefWidth="246.0" />
+                        <ColumnConstraints hgrow="SOMETIMES" maxWidth="393.0" minWidth="10.0" prefWidth="393.0" />
+                    </columnConstraints>
+                    <rowConstraints>
+                      <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
+                    </rowConstraints>
+                     <children>
+                        <TextField fx:id="spamDurationTextField" maxWidth="-Infinity" onAction="#changeDuration" prefHeight="25.0" prefWidth="158.0" text="120" GridPane.columnIndex="1" GridPane.halignment="LEFT" GridPane.valignment="TOP">
+                           <GridPane.margin>
+                              <Insets left="10.0" top="35.0" />
+                           </GridPane.margin>
+                        </TextField>
+                        <Label text="Duration of ban for spam" GridPane.columnIndex="1" GridPane.halignment="LEFT" GridPane.valignment="TOP">
+                           <GridPane.margin>
+                              <Insets left="10.0" top="10.0" />
+                           </GridPane.margin>
+                           <font>
+                              <Font name="Tahoma" size="14.0" />
+                           </font></Label>
+                        <Button mnemonicParsing="false" onAction="#changeDuration" text="Apply" GridPane.columnIndex="1" GridPane.halignment="LEFT" GridPane.valignment="TOP">
+                           <GridPane.margin>
+                              <Insets left="10.0" top="70.0" />
+                           </GridPane.margin>
+                        </Button>
+                        <ToggleButton fx:id="filterSpamToggleButton" mnemonicParsing="false" onAction="#changeFilteringSpamState" prefHeight="23.0" prefWidth="156.0" text="Filter spam" GridPane.halignment="LEFT" GridPane.valignment="TOP">
+                           <font>
+                              <Font name="Tahoma Bold" size="12.0" />
+                           </font>
+                           <GridPane.margin>
+                              <Insets left="10.0" top="10.0" />
+                           </GridPane.margin>
+                        </ToggleButton>
+                        <ToggleButton fx:id="filterWordsToggleButton" disable="true" mnemonicParsing="false" onAction="#changeFilteringState" prefHeight="23.0" prefWidth="156.0" text="Filter prohibited words">
+                           <font>
+                              <Font name="Tahoma Bold" size="12.0" />
+                           </font>
+                           <GridPane.margin>
+                              <Insets left="10.0" top="10.0" />
+                           </GridPane.margin>
+                        </ToggleButton>
+                        <ToggleButton fx:id="filterLinksToggleButton" disable="true" mnemonicParsing="false" onAction="#changeFilteringLinksState" prefHeight="23.0" prefWidth="156.0" text="Filter links" GridPane.valignment="BOTTOM">
+                           <font>
+                              <Font name="Tahoma Bold" size="12.0" />
+                           </font>
+                           <GridPane.margin>
+                              <Insets left="10.0" top="10.0" />
+                           </GridPane.margin>
+                        </ToggleButton>
+                     </children>
+                  </GridPane>
+                  <Separator layoutY="100.0" maxWidth="-Infinity" minWidth="-Infinity" prefHeight="15.0" prefWidth="839.0" AnchorPane.topAnchor="115.0" />
+                  <TilePane layoutY="123.0" prefHeight="119.0" prefWidth="213.0">
+                     <children>
+                        <CheckBox fx:id="spellOutMessagesCheckBox" alignment="CENTER_RIGHT" contentDisplay="RIGHT" ellipsisString="" mnemonicParsing="false" nodeOrientation="RIGHT_TO_LEFT" onAction="#changeSpellMode" prefHeight="25.0" prefWidth="203.0" text="Spell out messages" wrapText="true">
+                           <font>
+                              <Font name="Tahoma Bold" size="12.0" />
+                           </font>
+                           <TilePane.margin>
+                              <Insets left="10.0" top="10.0" />
+                           </TilePane.margin>
+                        </CheckBox>
+                        <CheckBox fx:id="greetViewersCheckBox" alignment="CENTER_RIGHT" contentDisplay="RIGHT" ellipsisString="" mnemonicParsing="false" nodeOrientation="RIGHT_TO_LEFT" onAction="#changeGreetMode" prefHeight="25.0" prefWidth="203.0" text="Greet new viewers" wrapText="true">
+                           <font>
+                              <Font name="Tahoma Bold" size="12.0" />
+                           </font>
+                           <TilePane.margin>
+                              <Insets left="10.0" top="10.0" />
+                           </TilePane.margin>
+                        </CheckBox>
+                        <CheckBox fx:id="parseChatCommandsCheckBox" alignment="CENTER_RIGHT" contentDisplay="RIGHT" ellipsisString="" mnemonicParsing="false" nodeOrientation="RIGHT_TO_LEFT" onAction="#changeParseMode" prefHeight="25.0" prefWidth="203.0" text="Parse chat commands" textOverrun="CLIP" wrapText="true">
+                           <font>
+                              <Font name="Tahoma Bold" size="12.0" />
+                           </font>
+                           <TilePane.margin>
+                              <Insets left="10.0" top="10.0" />
+                           </TilePane.margin>
+                        </CheckBox>
+                     </children>
+                  </TilePane>
+               </children>
+            </AnchorPane>
+        </content>
+      </Tab>
+      <Tab fx:id="chatCommandsTab" closable="false" disable="true" text="Chat commands">
+        <content>
+          <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="280.0" prefWidth="600.0">
+               <children>
+                  <TextArea fx:id="chatCommandsTextArea" editable="false" layoutX="21.0" layoutY="19.0" prefHeight="157.0" prefWidth="563.0" promptText="Looks like you don't have any chat commands added! You can add them by entering initiator(something that user has to write to get a response) and response (something that user will get in response if he sends message that starts withinitiator in the chat). " AnchorPane.bottomAnchor="120.0" AnchorPane.leftAnchor="20.0" AnchorPane.rightAnchor="20.0" AnchorPane.topAnchor="19.0" />
+                  <GridPane layoutX="22.0" layoutY="176.0" prefHeight="116.0" prefWidth="563.0" AnchorPane.bottomAnchor="4.0" AnchorPane.leftAnchor="20.0" AnchorPane.rightAnchor="20.0" AnchorPane.topAnchor="176.0">
+                    <columnConstraints>
+                      <ColumnConstraints hgrow="SOMETIMES" maxWidth="304.0" minWidth="10.0" prefWidth="276.0" />
+                      <ColumnConstraints hgrow="SOMETIMES" maxWidth="284.0" minWidth="10.0" prefWidth="281.0" />
+                    </columnConstraints>
+                    <rowConstraints>
+                      <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
+                      <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
+                    </rowConstraints>
+                     <children>
+                        <TextField fx:id="commandInitiatorTextField" maxWidth="-Infinity" prefHeight="25.0" prefWidth="160.0" promptText="Initiator" GridPane.halignment="LEFT" />
+                        <TextField fx:id="commandResponseTextField" maxWidth="-Infinity" prefHeight="25.0" prefWidth="389.0" promptText="Response" GridPane.columnSpan="2147483647" GridPane.halignment="RIGHT" />
+                        <Button mnemonicParsing="false" onAction="#removeChatCommand" prefHeight="59.0" prefWidth="270.0" text="Remove an existing chat command" GridPane.columnIndex="1" GridPane.halignment="RIGHT" GridPane.rowIndex="1">
+                           <font>
+                              <Font name="Tahoma Bold" size="14.0" />
+                           </font>
+                        </Button>
+                        <Button mnemonicParsing="false" onAction="#addChatCommand" prefHeight="59.0" prefWidth="270.0" text="Add new chat command" GridPane.halignment="LEFT" GridPane.rowIndex="1">
+                           <font>
+                              <Font name="Tahoma Bold" size="14.0" />
+                           </font>
+                        </Button>
+                     </children>
+                  </GridPane>
+               </children>
+            </AnchorPane>
+        </content>
+      </Tab>
+      <Tab fx:id="blackListTab" closable="false" disable="true" text="Blacklist">
+        <content>
+          <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="276.0" prefWidth="600.0">
+               <children>
+                  <TextArea fx:id="blacklistWordArea" editable="false" layoutX="22.0" layoutY="17.0" prefHeight="169.0" prefWidth="558.0" promptText="Looks like you don't have any blacklist words added! You can add them by entering the word in the textfield below and pressing &quot;add word&quot; button." AnchorPane.bottomAnchor="110.0" AnchorPane.leftAnchor="20.0" AnchorPane.rightAnchor="20.0" AnchorPane.topAnchor="17.0" />
+                  <GridPane layoutX="20.0" layoutY="186.0" prefHeight="93.0" prefWidth="557.0" AnchorPane.bottomAnchor="17.0" AnchorPane.leftAnchor="20.0" AnchorPane.rightAnchor="20.0" AnchorPane.topAnchor="186.0">
+                    <columnConstraints>
+                      <ColumnConstraints hgrow="SOMETIMES" minWidth="10.0" prefWidth="100.0" />
+                      <ColumnConstraints hgrow="SOMETIMES" minWidth="10.0" prefWidth="100.0" />
+                    </columnConstraints>
+                    <rowConstraints>
+                      <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
+                      <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
+                    </rowConstraints>
+                     <children>
+                        <TextField fx:id="blacklistWordField" prefHeight="25.0" prefWidth="142.0" promptText="Enter word here" GridPane.columnSpan="2147483647" />
+                        <Button mnemonicParsing="false" onAction="#addBlacklistWord" prefHeight="39.0" prefWidth="272.0" text="Add word" GridPane.halignment="LEFT" GridPane.rowIndex="1">
+                           <font>
+                              <Font name="Tahoma Bold" size="14.0" />
+                           </font>
+                        </Button>
+                        <Button mnemonicParsing="false" onAction="#removeBlacklistWord" prefHeight="39.0" prefWidth="272.0" text="Remove word" GridPane.columnIndex="1" GridPane.halignment="RIGHT" GridPane.rowIndex="1">
+                           <font>
+                              <Font name="Tahoma Bold" size="14.0" />
+                           </font>
+                        </Button>
+                     </children>
+                  </GridPane>
+               </children>
+            </AnchorPane>
+        </content>
+      </Tab>
+      <Tab fx:id="statisticsTab" closable="false" disable="true" text="Statistics">
+        <content>
+          <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="180.0" prefWidth="200.0">
+               <children>
+                  <GridPane layoutX="14.0" layoutY="19.0" prefHeight="204.0" prefWidth="503.0">
+                    <columnConstraints>
+                      <ColumnConstraints hgrow="SOMETIMES" maxWidth="339.0" minWidth="10.0" prefWidth="331.0" />
+                      <ColumnConstraints hgrow="SOMETIMES" maxWidth="246.0" minWidth="10.0" prefWidth="172.0" />
+                    </columnConstraints>
+                    <rowConstraints>
+                      <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
+                      <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
+                      <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
+                        <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
+                    </rowConstraints>
+                     <children>
+                        <Label text="Most active viewer of all the time is : ">
+                           <font>
+                              <Font name="Tahoma" size="16.0" />
+                           </font>
+                        </Label>
+                        <Label text="Most active viewer of current session is : " GridPane.rowIndex="1">
+                           <font>
+                              <Font name="Tahoma" size="16.0" />
+                           </font>
+                        </Label>
+                        <Label text="Amount of chat messages during this session:" GridPane.rowIndex="2">
+                           <font>
+                              <Font name="Tahoma" size="16.0" />
+                           </font>
+                        </Label>
+                        <Label fx:id="mostActiveViewerLabel" text="nobody yet!" GridPane.columnIndex="1">
+                           <font>
+                              <Font name="Tahoma" size="16.0" />
+                           </font></Label>
+                        <Label fx:id="mostActiveViewerSessionLabel" text="nobody yet!" GridPane.columnIndex="1" GridPane.rowIndex="1">
+                           <font>
+                              <Font name="Tahoma" size="16.0" />
+                           </font></Label>
+                        <Label fx:id="messagesAmountLabel" text="0" GridPane.columnIndex="1" GridPane.rowIndex="2" GridPane.valignment="CENTER">
+                           <font>
+                              <Font name="Tahoma" size="16.0" />
+                           </font></Label>
+                     </children>
+                  </GridPane>
+               </children>
+            </AnchorPane>
+        </content>
+      </Tab>
+    <Tab fx:id="debugTab" closable="false" disable="true" text="Debug">
+      <content>
+        <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="222.0" prefWidth="600.0">
+               <children>
+                  <TextArea fx:id="debugTextArea" editable="false" layoutX="14.0" layoutY="14.0" prefHeight="134.0" prefWidth="575.0" />
+                  <TextField fx:id="debugTextField" disable="true" layoutX="12.0" layoutY="243.0" prefHeight="25.0" prefWidth="576.0" />
+                  <CheckBox fx:id="debugCheckBox" layoutX="12.0" layoutY="184.0" mnemonicParsing="false" onAction="#changeDebugState" prefHeight="44.0" prefWidth="575.0" text="Enable debugging mode">
+                     <font>
+                        <Font name="Garamond" size="32.0" />
+                     </font>
+                  </CheckBox>
+               </children></AnchorPane>
+      </content>
+    </Tab>
+  </tabs>
+</TabPane>

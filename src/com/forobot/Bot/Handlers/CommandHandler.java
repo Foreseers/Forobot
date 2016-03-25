@@ -1,6 +1,10 @@
-package com.forobot;
+package com.forobot.Bot.Handlers;
+
+import com.forobot.Utils.FileUtils;
 
 import java.util.ArrayList;
+import java.util.Iterator;
+
 
 /**
  * Handles commands that users may send to the chat. Commands are sent following this syntax:
@@ -77,26 +81,28 @@ public class CommandHandler {
     public void addNewCommand(String initiator, String response) {
         if (initiator.startsWith("!")) {
             if (isExistingCommand(initiator)) {
-                System.out.println(String.format("Command \"%s\" already exists with a response \"%s\"", initiator, response));
+                LogHandler.log(String.format("Command \"%s\" already exists with a response \"%s\"", initiator, response));
             } else {
                 FileUtils.addLineToTheSection(String.format("%s=%s", initiator, response), SECTION_NAME, COMMANDS_FILE_PATH);
-                System.out.println(String.format("Successfully added new command \"%s\" with a response \"%s\".", initiator, response));
+                commands.add(new Command(initiator, response));
+                LogHandler.log(String.format("Successfully added new command \"%s\" with a response \"%s\".", initiator, response));
             }
         } else {
-            System.out.println("Command's initiator must start with a \"!\" symbol.");
+            LogHandler.log("Command's initiator must start with a \"!\" symbol.");
         }
     }
 
     public void removeExistingCommand(String initiator) {
         if (!isExistingCommand(initiator)) {
-            System.out.println(String.format("%s isn't an existing command!", initiator));
+            LogHandler.log(String.format("%s isn't an existing command!", initiator));
         } else {
-            for (Command command : commands) {
-                if (command.getInitiator().equals(initiator)) {
-                    commands.remove(command);
+            for (Iterator<Command> iterator = commands.iterator(); iterator.hasNext();){
+                Command command = iterator.next();
+                if (command.getInitiator().equals(initiator)){
+                    iterator.remove();
                 }
                 FileUtils.removeSpecificLineFromASection(initiator, SECTION_NAME, COMMANDS_FILE_PATH);
-                System.out.println(String.format("Command with an initiator \"%s\" removed successfully.", initiator));
+                LogHandler.log(String.format("Command with an initiator \"%s\" removed successfully.", initiator));
             }
         }
     }

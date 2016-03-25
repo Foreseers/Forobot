@@ -1,5 +1,10 @@
-package com.forobot;
+package com.forobot.Bot.Handlers;
 
+import com.forobot.Bot.Bot;
+import com.forobot.Bot.Functions.Statistics;
+import com.forobot.Bot.SpeechSynthesizer;
+
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Scanner;
 
@@ -17,6 +22,9 @@ import java.util.Scanner;
  * !spamAdd word            | adds a new word to the blacklist
  * !spamRemove word         | removes an existing word from the blacklist
  * !exit                    | terminates the app execution
+ * !mostActiveAllTime       | get the most active viewer
+ * !mostActiveSession       | get the most active viewer of current session
+ * !openFolder              | opens the folder
  */
 
 public class ConsoleHandler implements Runnable {
@@ -28,10 +36,13 @@ public class ConsoleHandler implements Runnable {
     private CommandHandler commandHandler;
     private SpeechSynthesizer speechSynthesizer;
 
+    private String VIEWERLIST_PATH;
+
     //A list containing all available commands.
     private ArrayList<String> availableCommands;
 
-    public ConsoleHandler() {
+    public ConsoleHandler(String viewerlistPath) {
+        this.VIEWERLIST_PATH = viewerlistPath;
         availableCommands = new ArrayList<>();
         //Load all the console commands into the ArrayList.
         loadCommands();
@@ -49,10 +60,14 @@ public class ConsoleHandler implements Runnable {
                 //Checking whether it's a valid command or not.
                 if (isConsoleCommand(input)) {
                     //If it's a valid command, respond on it.
-                    handleCommand(input);
+                    try {
+                        handleCommand(input);
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
                 } else {
                     //If it's not a valid command, tell that to user.
-                    System.out.println("Invalid console command!");
+                    LogHandler.log("Invalid console command!");
                 }
             }
         }
@@ -60,14 +75,8 @@ public class ConsoleHandler implements Runnable {
 
     public void setBot(Bot bot) {
         this.bot = bot;
-    }
-
-    public void setCommandHandler(CommandHandler commandHandler) {
-        this.commandHandler = commandHandler;
-    }
-
-    public void setSpeechSynthesizer(SpeechSynthesizer speechSynthesizer) {
-        this.speechSynthesizer = speechSynthesizer;
+        this.commandHandler = bot.getCommandHandler();
+        this.speechSynthesizer = bot.getSpeechSynthesizer();
     }
 
     /**
@@ -83,6 +92,10 @@ public class ConsoleHandler implements Runnable {
         availableCommands.add("!spamAdd word            | adds a new word to the blacklist");
         availableCommands.add("!spamRemove word         | removes an existing word from the blacklist");
         availableCommands.add("!exit                    | terminates the app execution");
+        availableCommands.add("!mostActiveAllTime       | get the most active viewer");
+        availableCommands.add("!mostActiveSession       | get the most active viewer of current session");
+        availableCommands.add("!openFolder              | opens the folder");
+
     }
 
     /**
@@ -108,7 +121,7 @@ public class ConsoleHandler implements Runnable {
      *
      * @param consoleCommand Command to respond.
      */
-    public void handleCommand(String consoleCommand) {
+    public void handleCommand(String consoleCommand) throws IOException {
         //Split command string by space regex
         String[] partsOfCommand = consoleCommand.split(" ");
         String consoleCommandInitiator = partsOfCommand[0];
@@ -143,7 +156,22 @@ public class ConsoleHandler implements Runnable {
                 break;
             }
             case ("!exit"):
+                Statistics.saveViewersListIntoAFile(VIEWERLIST_PATH);
                 System.exit(0);
+                break;
+            case ("!mostActiveAllTime"): {
+                Statistics.Viewer viewer = Statistics.getMostActiveViewerOfAllTime();
+                LogHandler.log(String.format("Most active is \"%s\" with %s messages", viewer.getName(), String.valueOf(viewer.getMessageCount())));
+                break;
+            }
+            case ("!mostActiveSession"): {
+                Statistics.Viewer viewer = Statistics.getMostActiveViewerOfCurrentSession();
+                LogHandler.log(String.format("Most active in current session is \"%s\" with %s messages", viewer.getName(), String.valueOf(viewer.getMessageCount())));
+                break;
+            }
+            case ("!openFolder"):
+                String folder = bot.getAPP_PATH();
+                Runtime.getRuntime().exec("explorer.exe /select," + folder);
                 break;
 
         }
@@ -151,7 +179,7 @@ public class ConsoleHandler implements Runnable {
 
     private void listCommands() {
         for (String command : availableCommands) {
-            System.out.println(command);
+            LogHandler.log(command);
         }
     }
 }

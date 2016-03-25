@@ -1,4 +1,4 @@
-package com.forobot;
+package com.forobot.Bot;
 
 import java.util.Locale;
 
@@ -15,6 +15,8 @@ import javax.speech.synthesis.SynthesizerModeDesc;
 public class SpeechSynthesizer {
     private SynthesizerModeDesc desc = new SynthesizerModeDesc(Locale.ENGLISH);
     private Synthesizer synthesizer;
+
+    private boolean spellMessages = false;
 
     public SpeechSynthesizer() {
         System.setProperty("freetts.voices",
@@ -39,13 +41,16 @@ public class SpeechSynthesizer {
      * @param message The message that the person sent
      */
     public void spell(String sender, String message) throws InterruptedException {
-
-        if (message.contains("http://") || message.contains("www.")) {
-            spell(sender);
-            spell(" sent a message with a link.");
-        } else {
-            spell(sender + " said");
-            spell(message);
+        if (spellMessages) {
+            synchronized (synthesizer) {
+                if (message.contains("http://") || message.contains("www.")) {
+                    spell(sender);
+                    spell(" sent a message with a link.");
+                } else {
+                    spell(sender + " said");
+                    spell(message);
+                }
+            }
         }
     }
 
@@ -55,8 +60,14 @@ public class SpeechSynthesizer {
      * @param message that needs to be spelled.
      */
     private void spell(String message) throws InterruptedException {
-        synthesizer.speakPlainText(message, null);
-        synthesizer.waitEngineState(Synthesizer.QUEUE_EMPTY);
+        if (spellMessages) {
+            synthesizer.speakPlainText(message, null);
+            synthesizer.waitEngineState(Synthesizer.QUEUE_EMPTY);
+        }
+    }
+
+    public void setSpellMessages(boolean spellMessages) {
+        this.spellMessages = spellMessages;
     }
 
     public void close() {

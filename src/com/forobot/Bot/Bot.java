@@ -1,26 +1,33 @@
-package com.forobot;
+package com.forobot.Bot;
+
+import com.forobot.Bot.Functions.Statistics;
+import com.forobot.Bot.Handlers.CommandHandler;
+import com.forobot.Bot.Handlers.ConsoleHandler;
+import com.forobot.Bot.Handlers.LogHandler;
+import com.forobot.Bot.Handlers.SpamChecker;
+import com.forobot.Utils.JSONParser;
+import com.forobot.Utils.TwitchUtils;
 
 import org.jibble.pircbot.PircBot;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
+import java.io.IOException;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
-
-//TODO: If options file doesn't exist, create it.
-//TODO: Update close() method
-
 
 
 /**
- * This class handles all the main functionality of bot, not including the console commands.
+ * This class handles all the main functionality of bot.
  */
 
 public class Bot extends PircBot {
-    private String viewerlistUrl = "https://tmi.twitch.tv/group/user/foreseer_/chatters";
-    private String followsUrl = "https://api.twitch.tv/kraken/channels/foreseer_/follows?limit=1";
+    private final String OPTIONS_PATH;
+    private final String VIEWERS_FILE_PATH;
+    private final String APP_PATH;
 
-    private final String OPTIONS_PATH = "D:\\options.ini";
-
+    private String viewerlistUrl;
+    private String followsUrl;
     private String channelName;
     private String adminName;
 
@@ -31,36 +38,76 @@ public class Bot extends PircBot {
     private ConsoleHandler consoleHandler;
 
     private ArrayList<String> viewerNicknames = null;
+    private ArrayList<String> emotes = null;
     private String lastFollower = null;
 
     private boolean parseChatCommands = false;
+    private boolean greetNewViewers = false;
+    private boolean spellOutMessages = true;
+
+    private int durationOfBan = 120;
 
 
-    public Bot(String name, String channelName) {
+    public Bot(String name, String channelName, String optionsPath, String viewerListPath) {
         this.setLogin(name);
         this.setName(name);
+
+
         this.channelName = channelName;
         this.adminName = channelName.substring(1);
+        this.OPTIONS_PATH = optionsPath;
+        this.VIEWERS_FILE_PATH = viewerListPath;
+
+        this.APP_PATH = System.getProperty("user.dir");
+
+        this.viewerlistUrl = String.format("https://tmi.twitch.tv/group/user/%s/chatters", channelName.substring(1));
+        this.followsUrl = String.format("https://api.twitch.tv/kraken/channels/%s/follows?limit=1", channelName.substring(1));
+
+        emotes = TwitchUtils.retrieveEmotesList();
+
         speechSynthesizer = new SpeechSynthesizer();
         commandHandler = new CommandHandler(OPTIONS_PATH);
-        spamChecker = new SpamChecker(OPTIONS_PATH);
+        spamChecker = new SpamChecker(OPTIONS_PATH, false);
         jsonParser = new JSONParser();
     }
 
     public void initialiseConsoleHandler(ConsoleHandler consoleHandler) {
         consoleHandler.setBot(this);
         this.consoleHandler = consoleHandler;
+    }
 
-        consoleHandler.setCommandHandler(commandHandler);
-        consoleHandler.setSpeechSynthesizer(speechSynthesizer);
+    public boolean isParseChatCommands() {
+        return parseChatCommands;
+    }
+
+    public void setParseChatCommands(boolean parseChatCommands) {
+        if (parseChatCommands) {
+            LogHandler.log("Chat commands parsing mode is ON.");
+        } else {
+            LogHandler.log("Chat commands parsing mode is OFF.");
+        }
+        this.parseChatCommands = parseChatCommands;
+    }
+
+    public String getAPP_PATH() {
+        return APP_PATH;
     }
 
     @Override
     protected void onMessage(String channel, String sender, String login, String hostname, String message) {
-        System.out.println("Message : " + message);
-        System.out.println("Sender : " + sender);
-        System.out.println("Channel : " + channel);
-        System.out.println();
+        //String information = String.format("%s send the message to the channel %s : \"%s\"", sender, channel, message);
+        //LogHandler.log(information);
+
+        Statistics.increaseAmountOfMessages(sender);
+
+        LocalDateTime time = LocalDateTime.now();
+
+        StringBuilder nowString = new StringBuilder();
+        nowString.append(time.getHour())
+                 .append(":")
+                 .append(time.getMinute());
+
+        LogHandler.logSilently(nowString.toString() + " : " + sender + " : " + message);
 
         try {
             if (sender.equals(adminName)) {
@@ -73,23 +120,17 @@ public class Bot extends PircBot {
                 if (parseChatCommands) {
                     sendMessage(channelName, commandHandler.getResponse(message));
                 } else {
-                    speechSynthesizer.spell(sender, "command");
+                    asynchronousSpell(sender, "command");
                 }
             } else if (!spamChecker.isSpam(message) || sender.equals(adminName)) {
-                speechSynthesizer.spell(sender, message);
+                asynchronousSpell(sender, replaceEmotes(message));
             } else {
-                speechSynthesizer.spell(sender, "spam");
-                handleSpam(sender, message, 120);
+                asynchronousSpell(sender, "spam");
+                handleSpam(sender, message, durationOfBan);
             }
-        } catch (InterruptedException e) {
+        } catch (InterruptedException | IOException e) {
             e.printStackTrace();
         }
-    }
-
-    @Override
-    protected void onJoin(String channel, String sender, String login, String hostname) {
-        System.out.println();
-        System.out.println(login + " joined " + channel);
     }
 
     /**
@@ -99,11 +140,29 @@ public class Bot extends PircBot {
      * @return message without emotes
      */
     private String replaceEmotes(String message) {
-        return null;
+        for (String emote : emotes){
+            if (message.contains(emote)){
+                message = message.replace(emote, "");
+            }
+        }
+        return message;
+    }
+
+    private void asynchronousSpell(String sender, String message) {
+        if (this.spellOutMessages) {
+            new Thread(() -> {
+                try {
+                    speechSynthesizer.spell(sender, message);
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+            }).start();
+        }
     }
 
     /**
-     * This method returns ArrayList with nicknames of viewers, used in checkForNewViewers method
+     * This method returns ArrayList with nicknames of ALL_TIME_VIEWERS, used in checkForNewViewers
+     * method
      *
      * @return ArrayList<String> with nicknames
      */
@@ -112,16 +171,16 @@ public class Bot extends PircBot {
         //build a JSON Object
         JSONObject jsonObject = null;
         try {
-            jsonObject = jsonParser.parseJsonFromUrl(viewerlistUrl);
+            jsonObject = JSONParser.parseJsonFromUrl(viewerlistUrl);
         } catch (JSONParser.ParsingException502 e) {
-            System.out.println("There was a 502/503 error parsing the viewer page.");
+            LogHandler.log("There was a 502/503 error parsing the viewer page.");
         }
         //get chatters array
         if (jsonObject == null) {
             return null;
         }
         JSONObject chatters = jsonObject.getJSONObject("chatters");
-        //get viewers and moderators JSONArrays
+        //get ALL_TIME_VIEWERS and moderators JSONArrays
         JSONArray jsonViewersArray = chatters.getJSONArray("viewers");
         JSONArray jsonModeratorsArray = chatters.getJSONArray("moderators");
 
@@ -132,28 +191,28 @@ public class Bot extends PircBot {
         for (int i = 0; i < jsonModeratorsArray.length(); i++) {
             viewersList.add(jsonModeratorsArray.get(i).toString());
         }
-
         return viewersList;
 
     }
 
     public void checkLastFollower() {
-        JSONParser JSONParser = new JSONParser();
         JSONObject followObject = null;
         try {
             followObject = JSONParser.parseJsonFromUrl(followsUrl);
         } catch (JSONParser.ParsingException502 parsingException502) {
-            System.out.println("There was a 502/503 error parsing the follower page.");
+            LogHandler.log("There was a 502/503 error parsing the follower page.");
         }
         JSONArray follows = followObject.getJSONArray("follows");
         JSONObject user = follows.getJSONObject(0);
         JSONObject name = user.getJSONObject("user");
+
         String follower = name.getString("name");
+
         if (lastFollower == null) {
             lastFollower = follower;
         } else {
             if (!lastFollower.equals(follower)) {
-                System.out.println(String.format("New follower %s !", follower));
+                LogHandler.log(String.format("New follower %s !", follower));
                 sendMessage(channelName, String.format("Thanks for follow, %s!", follower));
                 lastFollower = follower;
             }
@@ -171,9 +230,11 @@ public class Bot extends PircBot {
             if (newViewerNicknamesList != null) {
                 for (String nickname : newViewerNicknamesList) {
                     if (!viewerNicknames.contains(nickname)) {
-                        System.out.println(String.format("%s joined %s", nickname, channelName));
-                        System.out.println();
-                        sendMessage(channelName, String.format("Welcome, %s!", nickname));
+                        LogHandler.log(String.format("%s joined %s", nickname, channelName));
+                        LogHandler.log("");
+                        if (greetNewViewers) {
+                            sendMessage(channelName, String.format("Welcome, %s!", nickname));
+                        }
                     }
                 }
                 viewerNicknames = newViewerNicknamesList;
@@ -209,17 +270,13 @@ public class Bot extends PircBot {
 
             sendMessage(channelName, response);
             sendMessage(channelName, shortTimeoutMessage);
+        } else if (spamChecker.containsLinks(message)){
+            String response = String.format("Links are not permitted, %s", sender);
+
+            sendMessage(channelName, response);
+            sendMessage(channelName, shortTimeoutMessage);
         }
 
-    }
-
-    public void setParseChatCommands(boolean parseChatCommands) {
-        if (parseChatCommands) {
-            System.out.println("Chat commands parsing mode is ON.");
-        } else {
-            System.out.println("Chat commands parsing mode is OFF.");
-        }
-        this.parseChatCommands = parseChatCommands;
     }
 
     public void setChannelName(String channelName) {
@@ -229,7 +286,51 @@ public class Bot extends PircBot {
         followsUrl = String.format("https://api.twitch.tv/kraken/channels/%s/follows?limit=1", adminName);
     }
 
+    public SpamChecker getSpamChecker() {
+        return spamChecker;
+    }
+
+    public ConsoleHandler getConsoleHandler() {
+        return consoleHandler;
+    }
+
+    public CommandHandler getCommandHandler() {
+        return commandHandler;
+    }
+
+    public boolean isGreetNewViewers() {
+        return greetNewViewers;
+    }
+
+    public void setGreetNewViewers(boolean greetNewViewers) {
+        this.greetNewViewers = greetNewViewers;
+        LogHandler.log("Viewers greeting mode is " + (greetNewViewers ? "ON" : "OFF"));
+    }
+
+    public boolean isSpellOutMessages() {
+        return spellOutMessages;
+    }
+
+    public void setSpellOutMessages(boolean spellOutMessages) {
+        this.spellOutMessages = spellOutMessages;
+        speechSynthesizer.setSpellMessages(spellOutMessages);
+        LogHandler.log("Spelling mode is " + (spellOutMessages ? "ON" : "OFF"));
+    }
+
+    public SpeechSynthesizer getSpeechSynthesizer() {
+        return speechSynthesizer;
+    }
+
+    public JSONParser getJsonParser() {
+        return jsonParser;
+    }
+
+    public void setDurationOfBan(int durationOfBan) {
+        this.durationOfBan = durationOfBan;
+    }
+
     public void close() {
         speechSynthesizer.close();
+        Statistics.saveViewersListIntoAFile(VIEWERS_FILE_PATH);
     }
 }

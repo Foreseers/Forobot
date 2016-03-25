@@ -1,4 +1,6 @@
-package com.forobot;
+package com.forobot.Utils;
+
+import com.forobot.Bot.Handlers.LogHandler;
 
 import org.json.JSONObject;
 
@@ -17,7 +19,7 @@ public class JSONParser {
      * @param urlString URL to parse JSON from.
      * @return parsed JSONObject.
      */
-    public JSONObject parseJsonFromUrl(String urlString) throws ParsingException502 {
+    public static JSONObject parseJsonFromUrl(String urlString) throws ParsingException502 {
         JSONObject object = null;
         try {
             URL url = new URL(urlString);
@@ -31,19 +33,20 @@ public class JSONParser {
             object = new JSONObject(parsedData);
 
         } catch (MalformedURLException e) {
-            System.out.println("Wrong URL to parse");
+            LogHandler.log("Wrong URL to parse");
         } catch (IOException e) {
             String errorMessage = e.getMessage();
             if (errorMessage.contains("502") || errorMessage.contains("503")) {
                 throw new ParsingException502();
             } else {
-                e.printStackTrace();
+                LogHandler.log(e.getMessage());
+                return null;
             }
         }
         return object;
     }
 
-    public class ParsingException502 extends Exception {
+    public static class ParsingException502 extends Exception {
 
     }
 }

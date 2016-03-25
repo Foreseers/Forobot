@@ -1,4 +1,6 @@
-package com.forobot;
+package com.forobot.Bot.Handlers;
+
+import com.forobot.Utils.FileUtils;
 
 import java.io.BufferedWriter;
 import java.io.FileWriter;
@@ -15,12 +17,19 @@ public class SpamChecker {
     private final String BLACKLIST_PATH;
     private final String SECTION_NAME = "Blacklist";
 
+    private boolean filteringWords;
+    private boolean filteringLinks;
+
+    private boolean filteringSpam;
+
     private ArrayList<String> blackList;
 
-    public SpamChecker(String BLACKLIST_PATH) {
+    public SpamChecker(String BLACKLIST_PATH, boolean filteringWords) {
         this.BLACKLIST_PATH = BLACKLIST_PATH;
         blackList = new ArrayList<>();
         loadProhibitedWords();
+        this.filteringWords = filteringWords;
+        this.filteringSpam = false;
     }
 
     /**
@@ -30,8 +39,11 @@ public class SpamChecker {
      * @return true if the message is spam
      */
     public boolean isSpam(String message) {
-        if (containsConsecutiveRepeatingCharacters(message) || containsTooMuchCaps(message) || containsProhibitedWords(message)) {
-            return true;
+        if (filteringSpam) {
+            if (containsConsecutiveRepeatingCharacters(message) || containsTooMuchCaps(message) || containsProhibitedWords(message)
+                  || containsLinks(message)) {
+                return true;
+            }
         }
         return false;
     }
@@ -119,10 +131,25 @@ public class SpamChecker {
     }
 
     public boolean containsProhibitedWords(String message) {
+        if (!filteringWords){
+            return false;
+        }
+
         for (String prohibitedWord : blackList) {
             if (message.contains(prohibitedWord)) {
                 return true;
             }
+        }
+        return false;
+    }
+
+    public boolean containsLinks(String message){
+        if (!filteringLinks){
+            return false;
+        }
+
+        if (message.contains("http://") || message.contains("https://") || message.contains("www.")){
+            return true;
         }
         return false;
     }
@@ -133,25 +160,44 @@ public class SpamChecker {
 
     public void addNewProhibitedWord(String word) {
         if (blackList.contains(word)) {
-            System.out.println(String.format("Word %s already exists in the blacklist.", word));
+            LogHandler.log(String.format("Word %s already exists in the blacklist.", word));
         } else {
             try (BufferedWriter fileWriter = new BufferedWriter(new FileWriter(BLACKLIST_PATH, true))) {
                 FileUtils.addLineToTheSection(word, SECTION_NAME, BLACKLIST_PATH);
                 blackList.add(word);
-                System.out.println(String.format("Added new word \"%s\" to the blacklist.", word));
+                LogHandler.log(String.format("Added new word \"%s\" to the blacklist.", word));
             } catch (IOException e) {
                 e.printStackTrace();
             }
         }
     }
 
+    public boolean isExistingWord(String word){
+        return blackList.contains(word);
+    }
+
     public void removeExistingProhibitedWord(String word) {
         if (!blackList.contains(word)) {
-            System.out.println(String.format("%s isn't an existing word in blacklist!", word));
+            LogHandler.log(String.format("%s isn't an existing word in blacklist!", word));
         } else {
             blackList.remove(word);
             FileUtils.removeSpecificLineFromASection(word, SECTION_NAME, BLACKLIST_PATH);
-            System.out.println(String.format("Word \"%s\" was removed successfully from the blacklist.", word));
+            LogHandler.log(String.format("Word \"%s\" was removed successfully from the blacklist.", word));
         }
+    }
+
+    public void setFilteringWords(boolean filteringWords) {
+        this.filteringWords = filteringWords;
+        LogHandler.log( filteringWords ? "Blacklist filtering mode is ON" : "Blacklist filtering mode is OFF");
+    }
+
+    public void setFilteringSpam(boolean filteringSpam) {
+        this.filteringSpam = filteringSpam;
+        LogHandler.log( filteringSpam ? "Spam filtering mode is ON" : "Spam filtering mode is OFF");
+    }
+
+    public void setFilteringLinks(boolean filteringLinks) {
+        this.filteringLinks = filteringLinks;
+        LogHandler.log( filteringLinks ? "Links filtering mode is ON" : "Links filtering mode is OFF");
     }
 }

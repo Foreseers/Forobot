@@ -1,12 +1,18 @@
-package com.forobot;
+package com.forobot.Utils;
+
+import com.forobot.Bot.Handlers.LogHandler;
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
 import java.util.ArrayList;
 
 /**
@@ -17,7 +23,7 @@ public class FileUtils {
     public static ArrayList<String> readSectionFromFile(String sectionName, String filePath) {
         File file = new File(filePath);
         if (!file.exists()) {
-            System.out.println("Specified file doesn't exist!");
+            LogHandler.log("Specified file doesn't exist!");
             return null;
         }
 
@@ -26,7 +32,7 @@ public class FileUtils {
 
         ArrayList<String> lines = readAllLinesFromFile(filePath);
         if (!lines.contains(String.format("[Begin%s]", sectionName))) {
-            System.out.println("Specified section doesn't exist in the file!");
+            LogHandler.log("Specified section doesn't exist in the file!");
             return null;
         }
 
@@ -56,7 +62,7 @@ public class FileUtils {
 
         File file = new File(filePath);
         if (!file.exists()) {
-            System.out.println("Specified file doesn't exist!");
+            LogHandler.log("Specified file doesn't exist!");
             return null;
         }
 
@@ -64,6 +70,7 @@ public class FileUtils {
             while (fileReader.ready()) {
                 lines.add(fileReader.readLine());
             }
+            fileReader.close();
         } catch (FileNotFoundException e) {
             e.printStackTrace();
         } catch (IOException e) {
@@ -76,13 +83,13 @@ public class FileUtils {
     public static void removeSpecificLineFromASection(String line, String sectionName, String filePath) {
         File file = new File(filePath);
         if (!file.exists()) {
-            System.out.println("Specified file doesn't exist!");
+            LogHandler.log("Specified file doesn't exist!");
             return;
         }
 
         ArrayList<String> lines = readAllLinesFromFile(filePath);
         if (!lines.contains(String.format("[Begin%s]", sectionName))) {
-            System.out.println("Specified section doesn't exist!");
+            LogHandler.log("Specified section doesn't exist!");
             return;
         }
 
@@ -93,7 +100,7 @@ public class FileUtils {
             }
         }
         if (!lineExists) {
-            System.out.println("Specified line doesn't exist!");
+            LogHandler.log("Specified line doesn't exist!");
             return;
         }
 
@@ -120,13 +127,13 @@ public class FileUtils {
     public static void addLineToTheSection(String line, String sectionName, String filePath) {
         File file = new File(filePath);
         if (!file.exists()) {
-            System.out.println("Specified file doesn't exist!");
+            LogHandler.log("Specified file doesn't exist!");
             return;
         }
 
         ArrayList<String> lines = readAllLinesFromFile(filePath);
         if (!lines.contains(String.format("[Begin%s]", sectionName))) {
-            System.out.println("Specified section doesn't exist!");
+            LogHandler.log("Specified section doesn't exist!");
             return;
         }
 
@@ -150,5 +157,103 @@ public class FileUtils {
         } catch (IOException e) {
             e.printStackTrace();
         }
+    }
+
+    public static void writeAllLinesToTheFile(ArrayList<String> lines, String filePath){
+        File file = new File(filePath);
+        try (BufferedWriter fileWriter = new BufferedWriter(new FileWriter(file))){
+            for (String line : lines){
+                fileWriter.write(line + System.lineSeparator());
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    public static Object deserialiseFromFile(String fileName){
+        Object object = null;
+        try {
+            FileInputStream fileInputStream = new FileInputStream(fileName);
+            ObjectInputStream objectInputStream = new ObjectInputStream(fileInputStream);
+            object = objectInputStream.readObject();
+
+            fileInputStream.close();
+            objectInputStream.close();
+        } catch (IOException | ClassNotFoundException e) {
+            e.printStackTrace();
+        }
+        return object;
+    }
+
+    public static void serialiseToFile(Object object, String fileName){
+        FileOutputStream fileOutputStream = null;
+        try {
+            fileOutputStream = new FileOutputStream(fileName);
+            ObjectOutputStream objectOutputStream = new ObjectOutputStream(fileOutputStream);
+            objectOutputStream.writeObject(object);
+
+            fileOutputStream.close();
+            objectOutputStream.close();
+        } catch (FileNotFoundException e) {
+            LogHandler.log("Haven't found such file.");
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+    }
+
+    public static boolean isExistingFile(String filename){
+        File file = new File(filename);
+        return file.exists();
+    }
+
+    public static void createASectionsFile(String filepath, String... sections){
+        File file = new File(filepath);
+        if (file.exists()){
+            LogHandler.log("Sections file already exists!");
+            return;
+        }
+        try (BufferedWriter writer = new BufferedWriter(new FileWriter(file))) {
+            for (int i = 0; i < sections.length; i++) {
+                String name = sections[i];
+                StringBuilder output = new StringBuilder("[Begin");
+                output.append(name);
+                output.append("]");
+                output.append(System.lineSeparator());
+
+                writer.write(output.toString());
+
+                output = new StringBuilder("[End");
+                output.append(name);
+                output.append("]");
+                if (i != sections.length - 1){
+                    output.append(System.lineSeparator());
+                }
+
+                writer.write(output.toString());
+            }
+            LogHandler.log("Created a new sections file.");
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    public static void createAnEmptyFile(String filepath){
+        File file = new File(filepath);
+        if (file.exists()){
+            LogHandler.log("File already exists!");
+            return;
+        }
+
+        try {
+            file.createNewFile();
+        } catch (IOException e) {
+            LogHandler.log("Was an error creating a new empty file.");
+        }
+    }
+
+    public static void createAFolder(String path, String folderName){
+        String newDir = String.format("%s%s", path, folderName);
+        new File(newDir).mkdir();
     }
 }

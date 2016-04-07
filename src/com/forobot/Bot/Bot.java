@@ -12,7 +12,6 @@ import org.jibble.pircbot.PircBot;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
-import java.io.IOException;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 
@@ -49,7 +48,9 @@ public class Bot extends PircBot {
 
 
     public Bot(String name, String channelName, String optionsPath, String viewerListPath) {
+        //Sets the username under which bot will try to login to the server.
         this.setLogin(name);
+        //Sets the nickname the bot will use on IRC server, on twitch is the same of username.
         this.setName(name);
 
 
@@ -58,78 +59,78 @@ public class Bot extends PircBot {
         this.OPTIONS_PATH = optionsPath;
         this.VIEWERS_FILE_PATH = viewerListPath;
 
+        //Get absolute path to app's directory.
         this.APP_PATH = System.getProperty("user.dir");
 
+        //Build up urls for viewer list parsing and followers parsing
+        //Might be deprecated now as those features don't work as intended.
         this.viewerlistUrl = String.format("https://tmi.twitch.tv/group/user/%s/chatters", channelName.substring(1));
         this.followsUrl = String.format("https://api.twitch.tv/kraken/channels/%s/follows?limit=1", channelName.substring(1));
 
+        //Get the list of emotes from Twitch.
         emotes = TwitchUtils.retrieveEmotesList();
 
         speechSynthesizer = new SpeechSynthesizer();
-        commandHandler = new CommandHandler(OPTIONS_PATH);
+        commandHandler = new CommandHandler(OPTIONS_PATH, adminName);
         spamChecker = new SpamChecker(OPTIONS_PATH, false);
         jsonParser = new JSONParser();
     }
 
-    public void initialiseConsoleHandler(ConsoleHandler consoleHandler) {
-        consoleHandler.setBot(this);
-        this.consoleHandler = consoleHandler;
-    }
-
-    public boolean isParseChatCommands() {
-        return parseChatCommands;
-    }
-
-    public void setParseChatCommands(boolean parseChatCommands) {
-        if (parseChatCommands) {
-            LogHandler.log("Chat commands parsing mode is ON.");
-        } else {
-            LogHandler.log("Chat commands parsing mode is OFF.");
-        }
-        this.parseChatCommands = parseChatCommands;
-    }
-
-    public String getAPP_PATH() {
-        return APP_PATH;
-    }
-
+    /**
+     * This method is called every time a new message is recieved. Essentially all bot's main
+     * functionality is handled in this method. Bot will pass all the information about the recieved
+     * message as params when calling this method.
+     *
+     * @param channel  Channel in which the message was sent.
+     * @param sender   Nickname of the user that sent the message.
+     * @param login    Username of the user that sent the message. The same as nickname on Twitch.
+     * @param hostname Hostname of the user that sent the message. It's in following format :
+     *                 "user.tmi.twitch.tv", where "user" is the nickname of the sender.
+     * @param message  Message that the user sent.
+     */
     @Override
     protected void onMessage(String channel, String sender, String login, String hostname, String message) {
-        //String information = String.format("%s send the message to the channel %s : \"%s\"", sender, channel, message);
-        //LogHandler.log(information);
 
-        Statistics.increaseAmountOfMessages(sender);
+        //Increase the amount of message for statistics module.
+        Statistics.increaseAmountOfMessages(sender, message);
 
+        //Get current time for logging.
         LocalDateTime time = LocalDateTime.now();
 
+        sender = sender.toLowerCase();
+
+        //Build up the time string for logging.
         StringBuilder nowString = new StringBuilder();
         nowString.append(time.getHour())
-                 .append(":")
-                 .append(time.getMinute());
+                .append(":")
+                .append(time.getMinute());
 
+        //Silently log the recieved message.
         LogHandler.logSilently(nowString.toString() + " : " + sender + " : " + message);
 
-        try {
-            if (sender.equals(adminName)) {
-                if (consoleHandler.isConsoleCommand(message)) {
-                    consoleHandler.handleCommand(message);
-                }
-            }
-
-            if (commandHandler.isCommand(message) && !sender.equals(adminName)) {
-                if (parseChatCommands) {
-                    sendMessage(channelName, commandHandler.getResponse(message));
-                } else {
-                    asynchronousSpell(sender, "command");
-                }
-            } else if (!spamChecker.isSpam(message) || sender.equals(adminName)) {
-                asynchronousSpell(sender, replaceEmotes(message));
+        //If the message is a command, we respond it if the parseChatCommands boolean is true.
+        //If we currently don't respond to commands, we spell it out like "user said command".
+        //If it's not a command, check it for spam.
+        //If it doesn't contain spam or the sender is channel admin, spell it out.
+        if (commandHandler.isCommand(message.split(" ")[0])) {
+            if (parseChatCommands) {
+                //Respond the message in chat
+                commandHandler.respondCommand(this, sender, message);
             } else {
-                asynchronousSpell(sender, "spam");
+                //Spell it out like "user said command" otherwise.
+                asynchronousSpell(sender, "command");
+            }
+            //Check whether the message if spam or not.
+        } else if (!spamChecker.isSpam(message)) {
+            //Spell it out
+            asynchronousSpell(sender, replaceEmotes(message));
+        } else {
+            //Spell it out like "user said spam" if it's spam..
+            asynchronousSpell(sender, "spam");
+            //Ban the user
+            if (!sender.equals(adminName)) {
                 handleSpam(sender, message, durationOfBan);
             }
-        } catch (InterruptedException | IOException e) {
-            e.printStackTrace();
         }
     }
 
@@ -140,14 +141,26 @@ public class Bot extends PircBot {
      * @return message without emotes
      */
     private String replaceEmotes(String message) {
-        for (String emote : emotes){
-            if (message.contains(emote)){
+        for (String emote : emotes) {
+            if (message.contains(emote)) {
                 message = message.replace(emote, "");
             }
         }
         return message;
     }
 
+    public void sendMessage(String message){
+        sendMessage(channelName, message);
+    }
+
+    /**
+     * Asynchronously call the spell method of speechSynthesizer. The reason we need to do it in
+     * another thread is that otherwise speechSynthesizer would block out our current thread until
+     * the message is spelled out.
+     *
+     * @param sender  Sender of the message.
+     * @param message Message that needs to be spelled out.
+     */
     private void asynchronousSpell(String sender, String message) {
         if (this.spellOutMessages) {
             new Thread(() -> {
@@ -175,12 +188,13 @@ public class Bot extends PircBot {
         } catch (JSONParser.ParsingException502 e) {
             LogHandler.log("There was a 502/503 error parsing the viewer page.");
         }
-        //get chatters array
+
         if (jsonObject == null) {
             return null;
         }
+        //get chatters array
         JSONObject chatters = jsonObject.getJSONObject("chatters");
-        //get ALL_TIME_VIEWERS and moderators JSONArrays
+        //get viewers and moderators JSONArrays
         JSONArray jsonViewersArray = chatters.getJSONArray("viewers");
         JSONArray jsonModeratorsArray = chatters.getJSONArray("moderators");
 
@@ -195,6 +209,11 @@ public class Bot extends PircBot {
 
     }
 
+    /**
+     * Check whether the channel got new followers and greet them if such appeared. This method will
+     * stay here temporarily as better alternatives such as TwitchAlerts exist, and it's not working
+     * as intended anyways.
+     */
     public void checkLastFollower() {
         JSONObject followObject = null;
         try {
@@ -220,7 +239,10 @@ public class Bot extends PircBot {
     }
 
     /**
-     * This method checks whether new users joined the chat
+     * This method checks whether there are new users in chat or not. Currently not working as
+     * intended due to Twitch's API failure. Will probably be removed or reworked, currently leaving
+     * it be as a temporary alternative; at last, it's not very useful anyways besides when the
+     * channel only has very small amount of viewers.
      */
     public void checkForNewViewers() {
         if (viewerNicknames == null) {
@@ -250,7 +272,15 @@ public class Bot extends PircBot {
         spamChecker.removeExistingProhibitedWord(word);
     }
 
-    public void handleSpam(String sender, String message, int durationOfTimeout) throws InterruptedException {
+    /**
+     * This method handles spam by banning out the user or simply timing him out for 1 second to
+     * remove the spam message.
+     *
+     * @param sender            User that sent the message.
+     * @param message           Message that the user sent.
+     * @param durationOfTimeout Duration for which the user will be timed out.
+     */
+    public void handleSpam(String sender, String message, int durationOfTimeout) {
         String timeoutMessage = String.format(".timeout %s %d", sender, durationOfTimeout);
         String shortTimeoutMessage = String.format(".timeout %s %d", sender, 1);
 
@@ -270,7 +300,7 @@ public class Bot extends PircBot {
 
             sendMessage(channelName, response);
             sendMessage(channelName, shortTimeoutMessage);
-        } else if (spamChecker.containsLinks(message)){
+        } else if (spamChecker.containsLinks(message)) {
             String response = String.format("Links are not permitted, %s", sender);
 
             sendMessage(channelName, response);
@@ -321,6 +351,28 @@ public class Bot extends PircBot {
         return speechSynthesizer;
     }
 
+    public void initialiseConsoleHandler(ConsoleHandler consoleHandler) {
+        consoleHandler.setBot(this);
+        this.consoleHandler = consoleHandler;
+    }
+
+    public boolean isParseChatCommands() {
+        return parseChatCommands;
+    }
+
+    public void setParseChatCommands(boolean parseChatCommands) {
+        if (parseChatCommands) {
+            LogHandler.log("Chat commands parsing mode is ON.");
+        } else {
+            LogHandler.log("Chat commands parsing mode is OFF.");
+        }
+        this.parseChatCommands = parseChatCommands;
+    }
+
+    public String getAPP_PATH() {
+        return APP_PATH;
+    }
+
     public JSONParser getJsonParser() {
         return jsonParser;
     }
@@ -329,8 +381,4 @@ public class Bot extends PircBot {
         this.durationOfBan = durationOfBan;
     }
 
-    public void close() {
-        speechSynthesizer.close();
-        Statistics.saveViewersListIntoAFile(VIEWERS_FILE_PATH);
-    }
 }

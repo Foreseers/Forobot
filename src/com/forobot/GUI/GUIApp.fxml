@@ -208,7 +208,7 @@
         <content>
           <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="180.0" prefWidth="200.0">
                <children>
-                  <GridPane layoutX="14.0" layoutY="19.0" prefHeight="204.0" prefWidth="503.0">
+                  <GridPane layoutX="11.0" prefHeight="201.0" prefWidth="575.0">
                     <columnConstraints>
                       <ColumnConstraints hgrow="SOMETIMES" maxWidth="339.0" minWidth="10.0" prefWidth="331.0" />
                       <ColumnConstraints hgrow="SOMETIMES" maxWidth="246.0" minWidth="10.0" prefWidth="172.0" />
@@ -247,8 +247,49 @@
                            <font>
                               <Font name="Tahoma" size="16.0" />
                            </font></Label>
+                        <Label text="Current richest viewer:" GridPane.rowIndex="3">
+                           <font>
+                              <Font name="Tahoma" size="16.0" />
+                           </font>
+                        </Label>
+                        <Label fx:id="richestViewerLabel" text="nobody yet!" GridPane.columnIndex="1" GridPane.rowIndex="3">
+                           <font>
+                              <Font name="Tahoma" size="16.0" />
+                           </font>
+                        </Label>
                      </children>
                   </GridPane>
+               </children>
+            </AnchorPane>
+        </content>
+      </Tab>
+      <Tab fx:id="eventsTab" disable="true" text="Events">
+        <content>
+          <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="180.0" prefWidth="200.0">
+               <children>
+                  <Accordion layoutX="14.0" layoutY="14.0" prefHeight="138.0" prefWidth="568.0">
+                    <panes>
+                      <TitledPane text="Currency">
+                        <content>
+                          <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="180.0" prefWidth="200.0">
+                                 <children>
+                                    <Label layoutX="14.0" layoutY="14.0" text="Give or take coins from the viewer" />
+                                    <TextField fx:id="currencyViewerNameTextField" layoutX="14.0" layoutY="44.0" promptText="Viewer name" />
+                                    <TextField fx:id="currencyAmountLabelTextField" layoutX="171.0" layoutY="44.0" promptText="Amount of coins" />
+                                    <Button layoutX="334.0" layoutY="44.0" mnemonicParsing="false" onAction="#giveCoins" prefHeight="25.0" prefWidth="105.0" text="Give coins" />
+                                    <Button layoutX="453.0" layoutY="44.0" mnemonicParsing="false" onAction="#takeCoins" prefHeight="25.0" prefWidth="105.0" text="Take coins" />
+                                    <Label fx:id="currencyStatusLabel" layoutX="334.0" layoutY="14.0" text="         " />
+                                 </children>
+                              </AnchorPane>
+                        </content>
+                      </TitledPane>
+                      <TitledPane text="Events">
+                        <content>
+                          <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="180.0" prefWidth="200.0" />
+                        </content>
+                      </TitledPane>
+                    </panes>
+                  </Accordion>
                </children>
             </AnchorPane>
         </content>

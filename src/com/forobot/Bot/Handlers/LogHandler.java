@@ -11,6 +11,8 @@ import java.util.ArrayList;
 /**
  * This class essentially handles all the logging functionality.
  * Will create new files "log.txt" and "exlog" in the app dir during initialisation.
+ * Can log silently, i.e without telling user directly via "debug" window, and normally, i.e
+ * writing out the logged message to user as well as logging it to the file.
  */
 public class LogHandler {
     //All the data that needs to be logged out is stored here.
@@ -20,7 +22,7 @@ public class LogHandler {
     private static final String LOG_FILE_NAME = "log.txt";
     private static final String EXCEPTION_LOG_FILE_NAME = "exlog.txt";
 
-    //Used to log exceptions via system.seterr.
+    //Used to log exceptions via system.seterr().
     private static PrintStream exceptionPrintStream;
 
     static {
@@ -43,7 +45,7 @@ public class LogHandler {
     private LogHandler() {}
 
     /**
-     * Logs the input by adding it to the log list and printing it out to the console
+     * Logs the input by adding it to the log list and printing it out to the console.
      * @param message String that needs to be logged.
      */
     public static void log(String message){
@@ -76,7 +78,7 @@ public class LogHandler {
     }
 
     /**
-     * Once called this method will write out all the logged data to the log file
+     * Once called this method will write out all the logged data to the log file.
      */
     public static void close(){
         FileUtils.writeAllLinesToTheFile(logData, filePath);

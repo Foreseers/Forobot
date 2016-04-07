@@ -37,8 +37,8 @@ public class SpeechSynthesizer {
     /**
      * Synthesizes speech following this format: "SENDER said MESSAGE".
      *
-     * @param sender  The person who sent the message
-     * @param message The message that the person sent
+     * @param sender  The person who sent the message.
+     * @param message The message that the person sent.
      */
     public void spell(String sender, String message) throws InterruptedException {
         if (spellMessages) {
@@ -57,7 +57,7 @@ public class SpeechSynthesizer {
     /**
      * Spells the message.
      *
-     * @param message that needs to be spelled.
+     * @param message Message to be spelled out.
      */
     private void spell(String message) throws InterruptedException {
         if (spellMessages) {

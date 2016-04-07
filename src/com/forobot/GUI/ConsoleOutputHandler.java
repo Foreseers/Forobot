@@ -6,7 +6,11 @@ import java.io.OutputStream;
 import javafx.scene.control.TextArea;
 
 /**
- * Created by Foreseer on 16.03.2016.
+ * This class writes all messages that we get in System.out to text area.
+ *
+ * Only god knows why I have designed it to be this way, instead of just appending new text
+ * to textArea directly...
+ * Especially since System.out is only used by the bot itself to provide feedback to the user..
  */
 public class ConsoleOutputHandler extends OutputStream{
 
@@ -16,6 +20,13 @@ public class ConsoleOutputHandler extends OutputStream{
         this.textArea = textArea;
     }
 
+    /**
+     * Asynchronously add new text to textArea via the main thread,
+     * as all JAVAFX gui elements can not be edited outside the main thread.
+     *
+     * @param b     New text to be added, cast to char.
+     * @throws IOException
+     */
     @Override
     public void write(int b) throws IOException {
         javafx.application.Platform.runLater(() -> textArea.appendText(String.valueOf((char) b)));

@@ -10,11 +10,13 @@ import com.forobot.Utils.TwitchUtils;
 import org.jibble.pircbot.IrcException;
 
 import java.io.IOException;
+import java.io.UnsupportedEncodingException;
+import java.nio.charset.Charset;
 
 import javafx.application.Platform;
 
 //This is a general TO DO list.
-//TODO: Request music from youtube (low priority, hard to implement)
+//TODO: Request music from youtube
 //TODO: Polls
 //TODO: Adding time onto a counter for marathons per each subscribe/donation.
 //TODO: Custom API support (nightbot has it I guess?)
@@ -137,6 +139,13 @@ public class Operator implements Runnable {
         tellUser();
         //Enabling/Disabling debug mode, the bot will write additional information in chat about connection if debug mode is ON
         bot.setVerbose(false);
+        //Set encoding of the bot to UTF-8, otherwise won't be able to work with messages in other
+        //languages(Russian, for example).
+        try {
+            bot.setEncoding("UTF-8");
+        } catch (UnsupportedEncodingException e) {
+            e.printStackTrace();
+        }
         //Create a new console handler object.
         ConsoleHandler consoleHandler = new ConsoleHandler(VIEWERS_FILEPATH);
         //Initialise the console handler.
@@ -194,8 +203,6 @@ public class Operator implements Runnable {
             }
         } catch (IrcException | IOException | InterruptedException e) {
             e.printStackTrace();
-        } finally {
-            bot.close();
         }
     }
 
@@ -223,7 +230,4 @@ public class Operator implements Runnable {
         return VIEWERS_FILEPATH;
     }
 
-    public void close(){
-        bot.close();
-    }
 }

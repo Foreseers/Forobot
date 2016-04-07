@@ -22,6 +22,12 @@ public class MiscUtils {
         FileUtils.writeAllLinesToTheFile(randomLines, "D:\\treeset.txt");
     }
 
+    /**
+     * Return a random number within range [min, max].
+     * @param min lower bound of the range
+     * @param max upper bound of the range
+     * @return random number.
+     */
     public static int randomWithRange(int min, int max)
     {
         int range = (max - min) + 1;

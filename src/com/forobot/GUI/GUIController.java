@@ -25,6 +25,7 @@ import javafx.fxml.Initializable;
 import javafx.scene.control.Button;
 import javafx.scene.control.CheckBox;
 import javafx.scene.control.Label;
+import javafx.scene.control.ProgressBar;
 import javafx.scene.control.Tab;
 import javafx.scene.control.TextArea;
 import javafx.scene.control.TextField;
@@ -38,6 +39,8 @@ public class GUIController implements Initializable {
 
     private final String COMMANDS_SECTION = "ChatCommands";
     private final String BLACKLIST_SECTION = "Blacklist";
+
+    //Declarations of all GUI elements.
     @FXML
     private TextArea debugTextArea;
     @FXML
@@ -63,6 +66,8 @@ public class GUIController implements Initializable {
     @FXML
     private Tab statisticsTab;
     @FXML
+    private Tab eventsTab;
+    @FXML
     private TextField commandInitiatorTextField;
     @FXML
     private TextField commandResponseTextField;
@@ -85,9 +90,17 @@ public class GUIController implements Initializable {
     @FXML
     private Label messagesAmountLabel;
     @FXML
+    private Label richestViewerLabel;
+    @FXML
+    private Label currencyStatusLabel;
+    @FXML
     private CheckBox filterLinksCheckBox;
     @FXML
     private TextField spamDurationTextField;
+    @FXML
+    private TextField currencyViewerNameTextField;
+    @FXML
+    private TextField currencyAmountLabelTextField;
     @FXML
     private ToggleButton filterSpamToggleButton;
     @FXML
@@ -150,7 +163,6 @@ public class GUIController implements Initializable {
 
     public void launchBot(ActionEvent actionEvent) {
         if (operator == null) {
-            statusLabel.setText("Just a moment...");
             String channelName = channelNameTextField.getText();
             boolean parseChat = parseChatCommandsCheckBox.isSelected();
             if (!StringUtils.isAValidTwitchNickname(channelName)) {
@@ -175,6 +187,7 @@ public class GUIController implements Initializable {
             blackListTab.setDisable(false);
             optionsTab.setDisable(false);
             statisticsTab.setDisable(false);
+            eventsTab.setDisable(false);
 
             refreshChatCommandsTextArea();
             refreshBlackListTextArea();
@@ -222,7 +235,7 @@ public class GUIController implements Initializable {
     }
 
     public void initialiseStatisticsRefresher(Label allTime, Label session){
-        Statistics.Refresher refresher = new Statistics.Refresher(allTime, session, messagesAmountLabel);
+        Statistics.Refresher refresher = new Statistics.Refresher(allTime, session, messagesAmountLabel, richestViewerLabel);
         Thread thread = new Thread(refresher);
         thread.start();
     }
@@ -348,5 +361,46 @@ public class GUIController implements Initializable {
             return;
         }
         operator.getBot().setDurationOfBan(Integer.valueOf(value));
+    }
+
+    public void giveCoins(ActionEvent actionEvent) {
+        String viewerName = currencyViewerNameTextField.getText().toLowerCase();
+        if (!StringUtils.isNumeric(currencyAmountLabelTextField.getText())){
+            currencyAmountLabelTextField.clear();
+            currencyStatusLabel.setText("Amount must be numeric!");
+            return;
+        }
+        int amount = Integer.parseInt(currencyAmountLabelTextField.getText());
+        if (!Statistics.isAnActiveViewer(viewerName)){
+            currencyViewerNameTextField.clear();
+            currencyStatusLabel.setText("Haven't found such user!");
+            return;
+        }
+        Statistics.increaseCoinsAmount(viewerName, amount);
+        currencyStatusLabel.setText(String.format("Viewer %s now has %d coins!", viewerName,
+         Statistics.getViewer(viewerName).getMoneyAmount()));
+    }
+
+    public void takeCoins(ActionEvent actionEvent) {
+        String viewerName = currencyViewerNameTextField.getText().toLowerCase();
+        if (!StringUtils.isNumeric(currencyAmountLabelTextField.getText())){
+            currencyAmountLabelTextField.clear();
+            currencyStatusLabel.setText("Amount must be numeric!");
+            return;
+        }
+        int amount = Integer.parseInt(currencyAmountLabelTextField.getText());
+        if (!Statistics.isAnActiveViewer(viewerName)){
+            currencyViewerNameTextField.clear();
+            currencyStatusLabel.setText("Haven't found such user!");
+            return;
+        }
+        if (!Statistics.hasEnoughMoney(viewerName, amount)){
+            currencyAmountLabelTextField.clear();
+            currencyStatusLabel.setText("Viewer " + viewerName + " doesn't have enough coins for that!");
+            return;
+        }
+        Statistics.decreaseCoinsAmount(viewerName, amount);
+        currencyStatusLabel.setText(String.format("Viewer %s now has %d coins!", viewerName,
+         Statistics.getViewer(viewerName).getMoneyAmount()));
     }
 }

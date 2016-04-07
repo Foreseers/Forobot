@@ -6,6 +6,7 @@ import com.forobot.Bot.SpeechSynthesizer;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.List;
 import java.util.Scanner;
 
 /**
@@ -25,6 +26,7 @@ import java.util.Scanner;
  * !mostActiveAllTime       | get the most active viewer
  * !mostActiveSession       | get the most active viewer of current session
  * !openFolder              | opens the folder
+ * !getMessages user        | gets messages from user
  */
 
 public class ConsoleHandler implements Runnable {
@@ -95,6 +97,7 @@ public class ConsoleHandler implements Runnable {
         availableCommands.add("!mostActiveAllTime       | get the most active viewer");
         availableCommands.add("!mostActiveSession       | get the most active viewer of current session");
         availableCommands.add("!openFolder              | opens the folder");
+        availableCommands.add("!getMessages user        | gets messages from user");
 
     }
 
@@ -172,6 +175,13 @@ public class ConsoleHandler implements Runnable {
             case ("!openFolder"):
                 String folder = bot.getAPP_PATH();
                 Runtime.getRuntime().exec("explorer.exe /select," + folder);
+                break;
+            case ("!getMessages"):
+                String user = partsOfCommand[1];
+                List<Statistics.Message> messages = Statistics.getMessagesForUser(user);
+                for (Statistics.Message message : messages){
+                    System.out.println(message);
+                }
                 break;
 
         }

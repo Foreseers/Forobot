@@ -16,8 +16,8 @@ import java.io.ObjectOutputStream;
 import java.util.ArrayList;
 
 /**
- * A helper class that provides a functionality of parsing lines from options file, adding new lines
- * and removing existing ones.
+ * A helper class that provides a functionality of parsing lines from options file, adding new lines,
+ * removing existing ones etc.
  */
 public class FileUtils {
     public static ArrayList<String> readSectionFromFile(String sectionName, String filePath) {

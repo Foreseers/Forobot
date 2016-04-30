@@ -8,7 +8,8 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * Created by Foreseer on 18.03.2016.
+ * This class currently provides a method that sorts a map by values.
+ * Not actually used anywhere, was made rather for testing than actual functionality.
  */
 public class MapUtils {
     public static <K, V extends Comparable<? super V>> Map<K, V>

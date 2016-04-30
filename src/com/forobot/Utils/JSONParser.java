@@ -46,6 +46,10 @@ public class JSONParser {
         return object;
     }
 
+    /**
+     * I don't actually know what this class is made for.
+     * TODO: Get rid of this class or find its purpose.
+     */
     public static class ParsingException502 extends Exception {
 
     }

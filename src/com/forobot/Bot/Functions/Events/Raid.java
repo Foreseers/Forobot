@@ -8,33 +8,27 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * Created by Foreseer on 06/04/2016.
  */
-public class Raid implements Runnable {
+public class Raid extends AbstractEvent {
     private final Object lock = null;
     private AtomicInteger coinAmount;
     private Map<Statistics.Viewer, Integer> raidInfo;
     private Map<Statistics.Viewer, Integer> raidResult;
     private int percentage;
-    private int duration;
 
-    private boolean finished;
     private int clock;
 
-    private Bot bot;
-
     public Raid(Bot bot, int percentage, int duration) {
+        super(EventHandler.EventType.EVENT_RAID, duration, bot);
         raidInfo = Collections.synchronizedMap(new HashMap<>());
         raidResult = Collections.synchronizedMap(new HashMap<>());
         coinAmount = new AtomicInteger();
         this.percentage = percentage;
-        this.duration = duration;
-        this.bot = bot;
-        clock = 0;
-        finished = false;
     }
 
     public int getCoinAmount() {
@@ -62,7 +56,7 @@ public class Raid implements Runnable {
             try {
                 Thread.sleep(1000);
                 clock++;
-                if (clock % 10 == 0) {
+                if (clock % 10 == 0 && clock != 0) {
                     bot.sendMessage(String.format("It's %d seconds until the raid finishes!", duration - clock));
                     /*for (Map.Entry<Statistics.Viewer, Integer> entry : raidInfo.entrySet()) {
                         bot.sendMessage(String.format("%s participates with %d coins", entry.getKey().getName(), entry.getValue()));
@@ -72,6 +66,7 @@ public class Raid implements Runnable {
                 e.printStackTrace();
             }
         }
+        finished.set(true);
         double totalAmount = raidInfo.size();
         int neededAmount = (int) ((totalAmount / 100) * percentage);
         if (neededAmount < 1) {
@@ -111,11 +106,6 @@ public class Raid implements Runnable {
             stringBuilder.append(" and others!");
         }
         bot.sendMessage(stringBuilder.toString());
-        finished = true;
-    }
-
-    public boolean isFinished() {
-        return finished;
     }
 
     public Map<Statistics.Viewer, Integer> getRaidResult() {

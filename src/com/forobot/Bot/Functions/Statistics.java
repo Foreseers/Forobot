@@ -18,19 +18,26 @@ import javafx.scene.control.Label;
  * messages in the chat Message log and retrieving various information from it
  */
 public class Statistics {
+    //These objects contain information about viewers.
+    //ALL_TIME_VIEWERS contains information about viewers overall, so that were active in chat at all during all the period of bot's work.
+    //CURRENT_SESSION_VIEWERS contains information about viewers that chatted during current session(while bot was working).
     private static final ConcurrentHashMap<String, Viewer> ALL_TIME_VIEWERS = new ConcurrentHashMap<>();
     private static final ConcurrentHashMap<String, Viewer> CURRENT_SESSION_VIEWERS = new ConcurrentHashMap<>();
 
+    //MessageLog to collect statistics about messages and log it after the bot is done working in the log file.
     private static final List<Message> messageLog = Collections.synchronizedList(new ArrayList<Message>());
 
-    private static AtomicInteger messageCount = new AtomicInteger(0);
+    //Total amount of messages in the chat.
+    private static final AtomicInteger messageCount = new AtomicInteger(0);
 
+    //Cannot be instantiated.
     private Statistics() {
     }
 
     /**
-     * Viewer list is located in file, each line with one viewer in this format :
-     * "viewername=messagescount"
+     * This method initializes alltimeviewers map by loading data from the file.
+     * Viewer list is located in the file, each line with one viewer in this format :
+     * "viewername=messagescount". (format might be outdated)
      */
     public static void initializeViewersListFromFile(String filename) {
         ArrayList<String> lines = FileUtils.readAllLinesFromFile(filename);
@@ -46,6 +53,10 @@ public class Statistics {
         }
     }
 
+    /**
+     * This method saves ALL_TIME_VIEWERS into the file in the format of Viewer class's ToString method.
+     * @param filename Path to the file.
+     */
     public static void saveViewersListIntoAFile(String filename) {
         ArrayList<String> lines = new ArrayList<>();
         for (Map.Entry<String, Viewer> entry : ALL_TIME_VIEWERS.entrySet()) {
@@ -55,6 +66,13 @@ public class Statistics {
         FileUtils.writeAllLinesToTheFile(lines, filename);
     }
 
+    /**
+     * Increases amount of messages a certain viewer has in Currentsessionviewers and alltimeviewers maps.
+     * Also, increases amount of coins the viewer has and his message count(stores in the Viewer object).
+     * Furthermore, logs the message using logTheMessage method of this class.
+     * @param name      Name of the viewer.
+     * @param message   Message that viewer sent.
+     */
     public static void increaseAmountOfMessages(String name, String message) {
         name = name.toLowerCase();
         if (!name.endsWith("bot")) {
@@ -81,28 +99,57 @@ public class Statistics {
         logTheMessage(name, message);
     }
 
+    /**
+     * This method increases amount of coins a certain viewer has by a specified amount.
+     * It queries ALL_TIME_VIEWERS map, retrieves the viewer from it, and sets his money amount equal to his current money amount
+     * PLUS the specified amount.
+     * @param name      Name of the viewer.
+     * @param amount    Amount to be added to his coins amount.
+     */
     public static void increaseCoinsAmount(String name, int amount) {
         name = name.toLowerCase();
         ALL_TIME_VIEWERS.get(name).setMoneyAmount(ALL_TIME_VIEWERS.get(name).getMoneyAmount() + amount);
     }
 
+    /**
+     * This method decreases amount of coins a certain viewer has by a specified amount.
+     * To do that, viewer must have sufficient amount of coins in his account, otherwise this methods immidiately returns.
+     * It queries ALL_TIME_VIEWERS map, retrieves the viewer from it, and sets his money amount equal to his current money amount
+     * MINUS the specified amount.
+     * @param name      Name of the viewer.
+     * @param amount    Amount to be subtracted from his coins amount.
+     */
     public static void decreaseCoinsAmount(String name, int amount) {
-        if (!hasEnoughMoney(name, amount)){
+        if (!hasEnoughMoney(name, amount)) {
             return;
         }
         name = name.toLowerCase();
         ALL_TIME_VIEWERS.get(name).setMoneyAmount(ALL_TIME_VIEWERS.get(name).getMoneyAmount() - amount);
     }
 
-    public static boolean hasEnoughMoney(String name, int amount){
+    /**
+     * Checks whether the specified viewer has sufficient coins in his account.
+     * It queries ALL_TIME_VIEWER map, retrieves the viewer from it, and checks if his current amount of money is more or equals specified
+     * amount that is passed to this method.
+     * @param name      Name of the viewer.
+     * @param amount    Amount to be checked for
+     * @return          True if has enough money, False if not.
+     */
+    public static boolean hasEnoughMoney(String name, int amount) {
         name = name.toLowerCase();
         int currentAmount = ALL_TIME_VIEWERS.get(name).getMoneyAmount();
-        if (currentAmount < amount){
+        if (currentAmount < amount) {
             return false;
         }
         return true;
     }
 
+    /**
+     * Returns the viewer with most messages from all time.
+     * It goes through the entire map in a loop and finds the most active viewer there by activly comparing amount of messages
+     * of each viewer with previous max amount that was found in the map.
+     * @return      Most active viewer of all time.
+     */
     public static Viewer getMostActiveViewerOfAllTime() {
         int maxAmount = 0;
         String maxName = null;
@@ -117,11 +164,26 @@ public class Statistics {
         return mostActiveViewer;
     }
 
-    public static boolean isAnActiveViewer(String viewer){
+    /**
+     * Checks whether the viewer exists in ALL_TIME_VIEWERS map.
+     * This way we are checking if such viewer ever existed and chatted on the stream, as everyone who ever sent a message
+     * to the chat will be added to the ALL_TIME_VIEWERS base.
+     * @param viewer        Nickname of the viewer to be checked.
+     * @return              True if viewer exists, false if not.
+     */
+    public static boolean isAnActiveViewer(String viewer) {
         viewer = viewer.toLowerCase();
         return ALL_TIME_VIEWERS.containsKey(viewer);
     }
 
+    /**
+     * Returns an array list containing top viewers(by amount of messages) that ever chatted on stream.
+     * An array will contain as many entities as was specified by caller, with the amount passed in "count" param.
+     * If count param exceeds the size of ALL_TIME_VIEWERS map, amount of entities returned in the array list will be equal to
+     * ALL_TIME_VIEWERS size.
+     * @param count     Amount of viewers to be returned.
+     * @return          Array list with specified amount of top viewers.
+     */
     public static ArrayList<Viewer> getTopViewersAllTime(int count) {
         ArrayList<Viewer> arrayList = new ArrayList<>(count);
 
@@ -134,6 +196,9 @@ public class Statistics {
 
         for (int i = 0; i < count; i++) {
             arrayList.add(allViewers.get(i));
+            if (i == allViewers.size() - 1){
+                break;
+            }
         }
         return arrayList;
     }
@@ -168,16 +233,16 @@ public class Statistics {
         return mostActiveViewer;
     }
 
-    public static Viewer getRichestViewer(){
+    public static Viewer getRichestViewer() {
         int count = 0;
         String name = "";
-        for (Map.Entry<String, Viewer> entry : ALL_TIME_VIEWERS.entrySet()){
-            if (entry.getValue().getMoneyAmount() > count){
+        for (Map.Entry<String, Viewer> entry : ALL_TIME_VIEWERS.entrySet()) {
+            if (entry.getValue().getMoneyAmount() > count) {
                 name = entry.getKey();
                 count = entry.getValue().getMoneyAmount();
             }
         }
-        if (name.equals("")){
+        if (name.equals("")) {
             return null;
         }
         return ALL_TIME_VIEWERS.get(name);
@@ -187,13 +252,13 @@ public class Statistics {
         messageCount.incrementAndGet();
     }
 
-    private static void logTheMessage(String sender, String message){
+    private static void logTheMessage(String sender, String message) {
         new Thread(() -> {
             messageLog.add(new Message(sender, message));
         }).start();
     }
 
-    public static List<Message> getMessagesForUser(String sender){
+    public static List<Message> getMessagesForUser(String sender) {
         sender = sender.toLowerCase();
         ArrayList<Message> messages = new ArrayList<>();
         boolean isValidUser = false;
@@ -205,7 +270,7 @@ public class Statistics {
                 }
             }
         }
-        if (!isValidUser){
+        if (!isValidUser) {
             return null;
         }
         return messages;
@@ -219,9 +284,9 @@ public class Statistics {
         return ALL_TIME_VIEWERS.size() > 0;
     }
 
-    public static Viewer getViewer(String name){
+    public static Viewer getViewer(String name) {
         name = name.toLowerCase();
-        if (!ALL_TIME_VIEWERS.containsKey(name)){
+        if (!ALL_TIME_VIEWERS.containsKey(name)) {
             return null;
         }
         return ALL_TIME_VIEWERS.get(name);
@@ -270,7 +335,7 @@ public class Statistics {
 
         @Override
         public String toString() {
-            String result = this.name + "=" + this.messageCount + ";" +  this.moneyAmount;
+            String result = this.name + "=" + this.messageCount + ";" + this.moneyAmount;
             return result;
         }
 
@@ -382,7 +447,11 @@ public class Statistics {
                 } else {
                     mostActiveAllTime = String.format("%s with %s messages!", mostActiveAllTimeName, mostActiveAllTimeCount);
                     Viewer richestViewer = getRichestViewer();
-                    richest = String.format("%s with %d coins", richestViewer.getName(), richestViewer.getMoneyAmount());
+                    if (richestViewer != null) {
+                        richest = String.format("%s with %d coins", richestViewer.getName(), richestViewer.getMoneyAmount());
+                    } else {
+                        richest = null;
+                    }
                 }
 
                 if (mostActiveSessionName == null) {
@@ -396,7 +465,9 @@ public class Statistics {
                     allTimeLabel.setText(mostActiveAllTime);
                     sessionLabel.setText(mostActiveSession);
                     messageAmountLabel.setText(messageAmount);
-                    richestViewerLabel.setText(richest);
+                    if (richest != null) {
+                        richestViewerLabel.setText(richest);
+                    }
                 });
                 try {
                     Thread.sleep(10000);

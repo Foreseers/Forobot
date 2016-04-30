@@ -35,6 +35,7 @@ public class CommandHandler {
         reservedCommands.add("!botinfo");
         reservedCommands.add("!givemoney");
         reservedCommands.add("!raid");
+        reservedCommands.add("!vote");
 
         loadCommands();
     }
@@ -81,7 +82,7 @@ public class CommandHandler {
         if (command.startsWith("!roulette")) {
             String[] parts = command.split(" ");
             if (parts.length == 1) {
-                bot.sendMessage(EventHandler.initiateNewEvent(bot, Statistics.getViewer(sender), 0, EventHandler.Event.EVENT_ROULETTE));
+                bot.sendMessage(EventHandler.initiateNewEvent(bot, Statistics.getViewer(sender), 0, EventHandler.EventType.EVENT_ROULETTE));
                 return;
             } else {
                 if (StringUtils.isNumeric(parts[1])) {
@@ -90,7 +91,7 @@ public class CommandHandler {
                         return;
                     }
                     if (Statistics.hasEnoughMoney(sender, Integer.parseInt(parts[1]))) {
-                        bot.sendMessage(EventHandler.initiateNewEvent(bot, Statistics.getViewer(sender), Integer.parseInt(parts[1]), EventHandler.Event.EVENT_ROULETTE));
+                        bot.sendMessage(EventHandler.initiateNewEvent(bot, Statistics.getViewer(sender), Integer.parseInt(parts[1]), EventHandler.EventType.EVENT_ROULETTE));
                         return;
                     } else {
                         bot.sendMessage(String.format("You don't have enough money for that, %s!", sender));
@@ -187,7 +188,21 @@ public class CommandHandler {
                 amount = Statistics.getViewer(sender).getMoneyAmount();
             }
             Statistics.decreaseCoinsAmount(sender, amount);
-            EventHandler.initiateNewEvent(bot, Statistics.getViewer(sender), amount, EventHandler.Event.EVENT_RAID);
+            EventHandler.initiateNewEvent(bot, Statistics.getViewer(sender), amount, EventHandler.EventType.EVENT_RAID);
+            return;
+        }
+
+        if (command.startsWith("!vote")){
+            String[] parts = command.split(" ");
+            if (parts.length != 2 || !parts[0].equals("!vote") || !StringUtils.isNumeric(parts[1])){
+                bot.sendMessage("Send a vote command in following format: \"!vote optionnumber\", where option number is numeric");
+                return;
+            }
+            if (!EventHandler.isThereAnActivePoll()){
+                bot.sendMessage("There is no active poll right now!");
+                return;
+            }
+            EventHandler.initiateNewEvent(bot, Statistics.getViewer(sender), Integer.parseInt(parts[1]), EventHandler.EventType.EVENT_POLL);
             return;
         }
 

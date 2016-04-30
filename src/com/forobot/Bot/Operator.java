@@ -17,10 +17,9 @@ import javafx.application.Platform;
 
 //This is a general TO DO list.
 //TODO: Request music from youtube
-//TODO: Polls
 //TODO: Adding time onto a counter for marathons per each subscribe/donation.
 //TODO: Custom API support (nightbot has it I guess?)
-//TODO: Decent logging system needs to be implemented.
+//TODO: Decent logging system needs to be implemented. upd: sorta done for now. Still need a better one, and to get rid of output done through SOUT.
 
 /**
  * This class organises the work of bot-related classes and makes them work together.
@@ -65,10 +64,10 @@ public class Operator implements Runnable {
     //for the sake of performance.
     private boolean checked = false;
     //The bot, will be initialised in the constructor
-    private Bot bot;
+    private final Bot bot;
 
     //JavaFX Controller via which we are accessing gui elements.
-    private GUIController controller;
+    private final GUIController controller;
 
     public Operator(String channelName, boolean parseChatCommands, GUIController controller) {
         //Channel name comes without an "#" that we need to connect to the IRC, so we append it
@@ -99,7 +98,7 @@ public class Operator implements Runnable {
         }
 
         //Create a new bot object.
-        setBot(new Bot(BOT_TWITCH_NICKNAME, CHANNEL_NAME, OPTIONS_FILEPATH, VIEWERS_FILEPATH));
+        bot = new Bot(BOT_TWITCH_NICKNAME, CHANNEL_NAME, OPTIONS_FILEPATH, VIEWERS_FILEPATH);
         //Set bot's chat commands parse mode.
         bot.setParseChatCommands(parseChatCommands);
 
@@ -138,7 +137,7 @@ public class Operator implements Runnable {
     public void run() {
         tellUser();
         //Enabling/Disabling debug mode, the bot will write additional information in chat about connection if debug mode is ON
-        bot.setVerbose(false);
+        bot.setVerbose(true);
         //Set encoding of the bot to UTF-8, otherwise won't be able to work with messages in other
         //languages(Russian, for example).
         try {
@@ -210,9 +209,6 @@ public class Operator implements Runnable {
         return bot;
     }
 
-    public void setBot(Bot bot) {
-        this.bot = bot;
-    }
 
     public String getCOMMANDS_SECTION() {
         return COMMANDS_SECTION;

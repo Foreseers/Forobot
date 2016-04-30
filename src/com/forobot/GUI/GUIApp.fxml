@@ -1,12 +1,25 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<?import javafx.geometry.*?>
-<?import javafx.scene.text.*?>
-<?import javafx.scene.control.*?>
-<?import java.lang.*?>
-<?import javafx.scene.layout.*?>
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Accordion?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.CheckBox?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.Separator?>
+<?import javafx.scene.control.Tab?>
+<?import javafx.scene.control.TabPane?>
+<?import javafx.scene.control.TextArea?>
+<?import javafx.scene.control.TextField?>
+<?import javafx.scene.control.TitledPane?>
+<?import javafx.scene.control.ToggleButton?>
+<?import javafx.scene.layout.AnchorPane?>
+<?import javafx.scene.layout.ColumnConstraints?>
+<?import javafx.scene.layout.GridPane?>
+<?import javafx.scene.layout.RowConstraints?>
+<?import javafx.scene.layout.TilePane?>
+<?import javafx.scene.text.Font?>
 
-<TabPane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="325.0" prefWidth="597.0" tabClosingPolicy="UNAVAILABLE" xmlns="http://javafx.com/javafx/8" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.forobot.GUI.GUIController">
+<TabPane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="325.0" prefWidth="597.0" tabClosingPolicy="UNAVAILABLE" xmlns="http://javafx.com/javafx/8.0.65" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.forobot.GUI.GUIController">
   <tabs>
     <Tab closable="false" text="Launch">
       <content>
@@ -267,9 +280,9 @@
         <content>
           <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="180.0" prefWidth="200.0">
                <children>
-                  <Accordion layoutX="14.0" layoutY="14.0" prefHeight="138.0" prefWidth="568.0">
+                  <Accordion layoutX="14.0" layoutY="14.0" prefHeight="187.0" prefWidth="568.0">
                     <panes>
-                      <TitledPane text="Currency">
+                      <TitledPane prefHeight="109.0" prefWidth="568.0" text="Currency">
                         <content>
                           <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="180.0" prefWidth="200.0">
                                  <children>
@@ -283,11 +296,41 @@
                               </AnchorPane>
                         </content>
                       </TitledPane>
-                      <TitledPane text="Events">
-                        <content>
-                          <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="180.0" prefWidth="200.0" />
-                        </content>
-                      </TitledPane>
+                        <TitledPane animated="false" text="Events">
+                          <content>
+                            <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="180.0" prefWidth="200.0">
+                                 <children>
+                                    <TabPane layoutX="-1.0" layoutY="-1.0" prefHeight="115.0" prefWidth="567.0" tabClosingPolicy="UNAVAILABLE">
+                                      <tabs>
+                                        <Tab text="Raid">
+                                          <content>
+                                            <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="86.0" prefWidth="570.0">
+                                                   <children>
+                                                      <Button layoutX="187.0" layoutY="13.0" mnemonicParsing="false" onAction="#startRaid" prefHeight="55.0" prefWidth="365.0" text="Start a raid" />
+                                                      <TextField fx:id="raidDurationTextField" layoutX="14.0" layoutY="13.0" prefHeight="25.0" prefWidth="147.0" promptText="Enter duration of the event" />
+                                                      <TextField fx:id="raidPercentageTextField" layoutX="13.0" layoutY="43.0" promptText="Enter percentage" />
+                                                   </children>
+                                                </AnchorPane>
+                                          </content>
+                                        </Tab>
+                                        <Tab text="Poll">
+                                          <content>
+                                            <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="180.0" prefWidth="200.0">
+                                                   <children>
+                                                      <TextField fx:id="pollQuestionTextField" layoutX="14.0" layoutY="44.0" promptText="Enter the poll question" />
+                                                      <TextArea fx:id="pollAnswersTextArea" layoutX="172.0" layoutY="3.0" prefHeight="81.0" prefWidth="149.0" promptText="Enter possible answer, each with new line" />
+                                                      <Button layoutX="321.0" layoutY="5.0" mnemonicParsing="false" onAction="#startPoll" prefHeight="76.0" prefWidth="233.0" text="Start a poll" />
+                                                      <TextField fx:id="pollDurationTextField" layoutX="14.0" layoutY="14.0" promptText="Enter duration of the poll" />
+                                                   </children>
+                                                </AnchorPane>
+                                          </content>
+                                        </Tab>
+                                      </tabs>
+                                    </TabPane>
+                                 </children>
+                              </AnchorPane>
+                          </content>
+                        </TitledPane>
                     </panes>
                   </Accordion>
                </children>

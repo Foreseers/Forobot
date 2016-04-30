@@ -11,6 +11,8 @@ import javafx.scene.control.TextArea;
  * Only god knows why I have designed it to be this way, instead of just appending new text
  * to textArea directly...
  * Especially since System.out is only used by the bot itself to provide feedback to the user..
+ *
+ * It should actually be all rewritten, as nothing in the program directly writes to System.out, using LogHandler class instead.
  */
 public class ConsoleOutputHandler extends OutputStream{
 

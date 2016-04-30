@@ -10,7 +10,9 @@ import javax.speech.synthesis.SynthesizerModeDesc;
 
 
 /**
- * Synthesizes speech from text.
+ * Synthesizes speech from text using FreeTTS libraries.
+ * Can be toggled OFF and ON via spellMessages variable.
+ * Bot(and other classes) are calling methods of this class to synthesize speech.
  */
 public class SpeechSynthesizer {
     private SynthesizerModeDesc desc = new SynthesizerModeDesc(Locale.ENGLISH);
@@ -18,6 +20,7 @@ public class SpeechSynthesizer {
 
     private boolean spellMessages = false;
 
+    //TODO: More voices.
     public SpeechSynthesizer() {
         System.setProperty("freetts.voices",
                 "com.sun.speech.freetts.en.us.cmu_us_kal.KevinVoiceDirectory");
@@ -77,4 +80,4 @@ public class SpeechSynthesizer {
             e.printStackTrace();
         }
     }
-}
+}   

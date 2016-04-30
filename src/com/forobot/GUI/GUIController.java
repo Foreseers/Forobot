@@ -1,6 +1,7 @@
 package com.forobot.GUI;
 
 import com.forobot.Bot.Functions.Cleaner;
+import com.forobot.Bot.Functions.Events.EventHandler;
 import com.forobot.Bot.Functions.Statistics;
 import com.forobot.Bot.Handlers.LogHandler;
 import com.forobot.Bot.Operator;
@@ -16,20 +17,15 @@ import java.io.OutputStream;
 import java.io.PrintStream;
 import java.net.URL;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 import java.util.ResourceBundle;
 
 import javafx.application.Platform;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
-import javafx.scene.control.Button;
-import javafx.scene.control.CheckBox;
-import javafx.scene.control.Label;
-import javafx.scene.control.ProgressBar;
-import javafx.scene.control.Tab;
-import javafx.scene.control.TextArea;
-import javafx.scene.control.TextField;
-import javafx.scene.control.ToggleButton;
+import javafx.scene.control.*;
 import javafx.scene.input.KeyEvent;
 
 /**
@@ -107,6 +103,16 @@ public class GUIController implements Initializable {
     private ToggleButton filterWordsToggleButton;
     @FXML
     private ToggleButton filterLinksToggleButton;
+    @FXML
+    private TextField raidDurationTextField;
+    @FXML
+    private TextField raidPercentageTextField;
+    @FXML
+    private TextField pollQuestionTextField;
+    @FXML
+    private TextArea pollAnswersTextArea;
+    @FXML
+    private TextField pollDurationTextField;
 
 
     private OutputStream stream;
@@ -402,5 +408,71 @@ public class GUIController implements Initializable {
         Statistics.decreaseCoinsAmount(viewerName, amount);
         currencyStatusLabel.setText(String.format("Viewer %s now has %d coins!", viewerName,
          Statistics.getViewer(viewerName).getMoneyAmount()));
+    }
+
+    public void startRaid(ActionEvent actionEvent) {
+        if (EventHandler.isThereAnActiveRaid()){
+            Alert alert = new Alert(Alert.AlertType.ERROR);
+            alert.setTitle("Error!");
+            alert.setHeaderText(null);
+            alert.setContentText("You need to wait until the current raid finishes!");
+            alert.showAndWait();
+            return;
+        }
+        String durationText = raidDurationTextField.getText();
+        String percentageText = raidPercentageTextField.getText();
+        int duration;
+        int percentage;
+        if (!StringUtils.isNumeric(durationText)){
+            raidDurationTextField.clear();
+            raidDurationTextField.setPromptText("Duration should be numeric!");
+            return;
+        }
+        if (!StringUtils.isNumeric(percentageText)){
+            raidPercentageTextField.clear();
+            raidPercentageTextField.setPromptText("Percentage should be numeric!");
+            return;
+        }
+
+        duration = Integer.parseInt(durationText);
+        percentage = Integer.parseInt(percentageText);
+
+        if (percentage > 100 || percentage <= 0){
+            raidPercentageTextField.clear();
+            raidPercentageTextField.setPromptText("Percentage should be in between 0 and 100!");
+            return;
+        }
+
+        EventHandler.startNewRaid(operator.getBot(), percentage, duration);
+    }
+
+    public void startPoll(ActionEvent actionEvent) {
+        if (EventHandler.isThereAnActivePoll()){
+            Alert alert = new Alert(Alert.AlertType.ERROR);
+            alert.setTitle("Error!");
+            alert.setHeaderText(null);
+            alert.setContentText("You need to wait until current poll finishes!");
+            alert.showAndWait();
+            return;
+        }
+        List<String> answersList = new ArrayList<>(Arrays.asList(pollAnswersTextArea.getText().split("\n")));
+        String question = pollQuestionTextField.getText();
+        if (answersList.size() < 2){
+            pollAnswersTextArea.clear();
+            pollAnswersTextArea.setPromptText("There should be 2 or more answers!");
+            return;
+        }
+        if (!StringUtils.isNumeric(pollDurationTextField.getText())){
+            pollDurationTextField.clear();
+            pollDurationTextField.setPromptText("Duration should be numeric!");
+            return;
+        }
+        int duration = Integer.parseInt(pollDurationTextField.getText());
+        if (duration < 10){
+            pollDurationTextField.clear();
+            pollDurationTextField.setPromptText("Duration can't be less than 10!");
+            return;
+        }
+        EventHandler.startNewPoll(operator.getBot(), answersList, question, duration);
     }
 }

@@ -5,13 +5,16 @@ import java.util.TreeSet;
 
 /**
  * This class isn't serving any purpose, really, just dumping absolutely random methods here that I
- * needed during testing.
+ * needed during testing AND methods that are still used, but are too minor to create new classes for.
+ * Such as method randomWithRange, that, despite being used in the bot, is very small, doesn't belong to any specific
+ * category, so I am leaving it here.
+ *
  * Neither of this methods are used in the program, most likely, so no documentation will be provided.
- * Although used methods will perhaps be documented, there's no guarantee as i'd probably find place
- * for them in other classes. :)
+ * Although used methods will perhaps be documented, there's no guarantee as in the case if they were really useful,
+ * I would probably find place for them in other classes. :)
  */
 public class MiscUtils {
-    public static void FillFileWithRandomViewers(int count){
+    public static void FillFileWithRandomViewers(String filename, int count){
         ArrayList<String> randomLines = new ArrayList<>();
         for (int i = 1; i <= count; i++){
             String name = "viewer" + i;
@@ -19,7 +22,7 @@ public class MiscUtils {
             //randomLines.add(String.format("%s=%s", name, amount));
             randomLines.add(amount);
         }
-        FileUtils.writeAllLinesToTheFile(randomLines, "D:\\treeset.txt");
+        FileUtils.writeAllLinesToTheFile(randomLines, filename);
     }
 
     /**

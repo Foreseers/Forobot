@@ -1,16 +1,14 @@
 package com.forobot.GUI;
 
 /**
- * Application is the main class of any JavaFX applications, and so is of mine.
  * Don't touch.
- * If you touch something besides final variables, the program will refuse to work properly.
- * Variables are very sensitive to touching as well and don't like being messed with, either.
  */
 
 import com.forobot.Bot.Functions.Statistics;
 import com.forobot.Bot.Handlers.LogHandler;
 
 import java.io.IOException;
+import java.util.concurrent.TimeUnit;
 
 import javafx.application.Application;
 import javafx.application.Platform;
@@ -41,10 +39,7 @@ public class GUIApp extends Application {
         primaryStage.setResizable(false);
         primaryStage.show();
 
-        /*  Could as well be commented out, does nothing, i'll leave it be, however, to allow
-         *  direct manipulations with the controller when needed.
-         *  Doubt it'll ever be needed, though.
-         */
+        //Get a controller object so we can shutdown the executor service
         guiController = loader.getController();
     }
 
@@ -52,6 +47,14 @@ public class GUIApp extends Application {
     public void stop() {
         Statistics.saveViewersListIntoAFile(guiController.getOperator().getVIEWERS_FILEPATH());
         LogHandler.close();
+        guiController.getExecutorService().shutdownNow();
+        try {
+            if (!guiController.getExecutorService().awaitTermination(5, TimeUnit.SECONDS)){
+                LogHandler.log("Timeouted, quitting normally.");
+            }
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
         Platform.exit();
         System.exit(0);
     }

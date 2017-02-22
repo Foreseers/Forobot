@@ -26,4 +26,23 @@ public abstract class AbstractEvent implements Runnable {
     public boolean isFinished(){
         return finished.get();
     }
+
+    @Override
+    public final void run() {
+        while (clock < duration){
+            try {
+                Thread.sleep(1000);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+            clock++;
+            eventAction();
+        }
+        finished.set(true);
+        eventFinish();
+    }
+
+    protected abstract void eventAction();
+
+    protected abstract void eventFinish();
 }

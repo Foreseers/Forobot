@@ -31,24 +31,25 @@ public class Quiz extends AbstractEvent{
     }
 
     @Override
-    public void run() {
-        while (clock < duration && !gotRightAnswer){
-            try {
-                Thread.sleep(1000);
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            }
-            if (clock % 10 == 0 && clock != 0){
-                bot.sendMessage(String.format("It's %d seconds until the end of quiz! The question is - %s", duration - clock, question));
+    protected void eventAction() {
+        while (!gotRightAnswer){
+            if ((clock % 10 == 0) && (duration - clock != 0)){
+                bot.sendMessage(String.format("It's %d seconds until the end of quiz! The question is - %s?", duration - clock, question));
             }
         }
-        finished.set(true);
-        Pair<String, String> bestGuess = findBestGuess();
-        if (bestGuess == null){
-            bot.sendMessage("There were no good guesses among participants.");
-            return;
+    }
+
+    @Override
+    protected void eventFinish() {
+        if (!gotRightAnswer) {
+            Pair<String, String> bestGuess = findBestGuess();
+            if (bestGuess == null) {
+                bot.sendMessage("There were no good guesses among participants.");
+                return;
+            }
+            bot.sendMessage(String.format("%s had the best guess: \"%s\"", bestGuess.getKey(), bestGuess.getValue()));
         }
-        bot.sendMessage(String.format("%s had the best guess: \"%s\"", bestGuess.getKey(), bestGuess.getValue()));
+        bot.sendMessage(String.format("%s answered correct: \"%s\"!", rightAnswer.getKey().getName(), rightAnswer.getValue()));
         return;
     }
 
@@ -79,7 +80,7 @@ public class Quiz extends AbstractEvent{
     }
 
     public void participate(Statistics.Viewer viewer, String guess){
-        if (guess.contains(answer)){
+        if (guess.equals(answer)){
             rightAnswer = new Pair<>(viewer, guess);
             gotRightAnswer = true;
             return;

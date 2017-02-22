@@ -8,20 +8,17 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
-import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * Created by Foreseer on 06/04/2016.
  */
 public class Raid extends AbstractEvent {
-    private final Object lock = null;
     private AtomicInteger coinAmount;
     private Map<Statistics.Viewer, Integer> raidInfo;
     private Map<Statistics.Viewer, Integer> raidResult;
     private int percentage;
 
-    private int clock;
 
     public Raid(Bot bot, int percentage, int duration) {
         super(EventHandler.EventType.EVENT_RAID, duration, bot);
@@ -51,22 +48,14 @@ public class Raid extends AbstractEvent {
     }
 
     @Override
-    public void run() {
-        while (clock < duration) {
-            try {
-                Thread.sleep(1000);
-                clock++;
-                if (clock % 10 == 0 && clock != 0) {
-                    bot.sendMessage(String.format("It's %d seconds until the raid finishes!", duration - clock));
-                    /*for (Map.Entry<Statistics.Viewer, Integer> entry : raidInfo.entrySet()) {
-                        bot.sendMessage(String.format("%s participates with %d coins", entry.getKey().getName(), entry.getValue()));
-                    }*/
-                }
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            }
+    protected void eventAction() {
+        if ((clock % 10 == 0) && (duration - clock != 0)) {
+            bot.sendMessage(String.format("It's %d seconds until the raid finishes!", duration - clock));
         }
-        finished.set(true);
+    }
+
+    @Override
+    protected void eventFinish() {
         double totalAmount = raidInfo.size();
         int neededAmount = (int) ((totalAmount / 100) * percentage);
         if (neededAmount < 1) {
@@ -94,15 +83,15 @@ public class Raid extends AbstractEvent {
         }
         StringBuilder stringBuilder = new StringBuilder("Congratulations, ");
         int i = 0;
-        for (Map.Entry<Statistics.Viewer, Integer> entry : raidResult.entrySet()){
-            if (i > 20){
+        for (Map.Entry<Statistics.Viewer, Integer> entry : raidResult.entrySet()) {
+            if (i > 20) {
                 break;
             }
             stringBuilder.append(entry.getKey().getName() + ", ");
             i++;
         }
         stringBuilder.delete(stringBuilder.lastIndexOf(","), stringBuilder.length() - 1);
-        if (i > 20){
+        if (i > 20) {
             stringBuilder.append(" and others!");
         }
         bot.sendMessage(stringBuilder.toString());

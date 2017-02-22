@@ -36,6 +36,8 @@ public class CommandHandler {
         reservedCommands.add("!givemoney");
         reservedCommands.add("!raid");
         reservedCommands.add("!vote");
+        reservedCommands.add("!quiz");
+        reservedCommands.add("!raffle");
 
         loadCommands();
     }
@@ -82,7 +84,7 @@ public class CommandHandler {
         if (command.startsWith("!roulette")) {
             String[] parts = command.split(" ");
             if (parts.length == 1) {
-                bot.sendMessage(EventHandler.initiateNewEvent(bot, Statistics.getViewer(sender), 0, EventHandler.EventType.EVENT_ROULETTE));
+                bot.sendMessage(EventHandler.initiateNewEvent(bot, Statistics.getViewer(sender), "0", EventHandler.EventType.EVENT_ROULETTE));
                 return;
             } else {
                 if (StringUtils.isNumeric(parts[1])) {
@@ -91,7 +93,7 @@ public class CommandHandler {
                         return;
                     }
                     if (Statistics.hasEnoughMoney(sender, Integer.parseInt(parts[1]))) {
-                        bot.sendMessage(EventHandler.initiateNewEvent(bot, Statistics.getViewer(sender), Integer.parseInt(parts[1]), EventHandler.EventType.EVENT_ROULETTE));
+                        bot.sendMessage(EventHandler.initiateNewEvent(bot, Statistics.getViewer(sender), parts[1], EventHandler.EventType.EVENT_ROULETTE));
                         return;
                     } else {
                         bot.sendMessage(String.format("You don't have enough money for that, %s!", sender));
@@ -188,7 +190,7 @@ public class CommandHandler {
                 amount = Statistics.getViewer(sender).getMoneyAmount();
             }
             Statistics.decreaseCoinsAmount(sender, amount);
-            EventHandler.initiateNewEvent(bot, Statistics.getViewer(sender), amount, EventHandler.EventType.EVENT_RAID);
+            EventHandler.initiateNewEvent(bot, Statistics.getViewer(sender), String.valueOf(amount), EventHandler.EventType.EVENT_RAID);
             return;
         }
 
@@ -202,7 +204,33 @@ public class CommandHandler {
                 bot.sendMessage("There is no active poll right now!");
                 return;
             }
-            EventHandler.initiateNewEvent(bot, Statistics.getViewer(sender), Integer.parseInt(parts[1]), EventHandler.EventType.EVENT_POLL);
+            EventHandler.initiateNewEvent(bot, Statistics.getViewer(sender), parts[1], EventHandler.EventType.EVENT_POLL);
+            return;
+        }
+
+        if (command.startsWith("!quiz")){
+            String[] parts = command.split(" ");
+            StringBuilder answer = new StringBuilder();
+            if (parts.length < 2){
+                bot.sendMessage("Send a quiz vote command in following format \"!quiz answer\", where answer needs to be at least one word");
+                return;
+            }
+            for (int i = 1; i < parts.length; i++){
+                answer.append(parts[i]);
+                answer.append(" ");
+            }
+            answer = new StringBuilder(answer.toString().trim());
+            EventHandler.initiateNewEvent(bot, Statistics.getViewer(sender), answer.toString(), EventHandler.EventType.EVENT_QUIZ);
+            return;
+        }
+
+        if (command.startsWith("!raffle")){
+            String[] parts = command.split(" ");
+            if (!parts[0].equals("!raffle")){
+                bot.sendMessage("Send a raffle command in following format \"!raffle\".");
+                return;
+            }
+            EventHandler.initiateNewEvent(bot, Statistics.getViewer(sender), null, EventHandler.EventType.EVENT_RAFFLE);
             return;
         }
 

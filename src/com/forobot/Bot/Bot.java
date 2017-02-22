@@ -141,7 +141,9 @@ public class Bot extends PircBot {
      * @return message without emotes
      */
     private String replaceEmotes(String message) {
+        message = message.toLowerCase();
         for (String emote : emotes) {
+            emote = emote.toLowerCase();
             if (message.contains(emote)) {
                 message = message.replace(emote, "");
             }

@@ -64,8 +64,13 @@ public class SpeechSynthesizer {
      */
     private void spell(String message) throws InterruptedException {
         if (spellMessages) {
-            synthesizer.speakPlainText(message, null);
-            synthesizer.waitEngineState(Synthesizer.QUEUE_EMPTY);
+            if (message.length() > 60) {
+                synthesizer.speakPlainText("a long message", null);
+                synthesizer.waitEngineState(Synthesizer.QUEUE_EMPTY);
+            } else {
+                synthesizer.speakPlainText(message, null);
+                synthesizer.waitEngineState(Synthesizer.QUEUE_EMPTY);
+            }
         }
     }
 

@@ -20,6 +20,8 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.ResourceBundle;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 import javafx.application.Platform;
 import javafx.event.ActionEvent;
@@ -113,10 +115,21 @@ public class GUIController implements Initializable {
     private TextArea pollAnswersTextArea;
     @FXML
     private TextField pollDurationTextField;
+    @FXML
+    private TextField quizDurationTextField;
+    @FXML
+    private TextField quizQuestionTextField;
+    @FXML
+    private TextField quizAnswerTextField;
+    @FXML
+    private TextField raffleDurationTextField;
+    @FXML
+    private TextField raffleWinnerTextField;
 
 
     private OutputStream stream;
     private Operator operator;
+    private ExecutorService executorService;
 
     @Override
     public void initialize(URL location, ResourceBundle resources) {
@@ -168,6 +181,7 @@ public class GUIController implements Initializable {
     }
 
     public void launchBot(ActionEvent actionEvent) {
+        executorService = Executors.newSingleThreadExecutor();
         if (operator == null) {
             String channelName = channelNameTextField.getText();
             boolean parseChat = parseChatCommandsCheckBox.isSelected();
@@ -181,8 +195,7 @@ public class GUIController implements Initializable {
             }
             channelName = channelName.toLowerCase();
             operator = new Operator(channelName, parseChat, this);
-            Thread operatorThread = new Thread(operator);
-            operatorThread.start();
+            executorService.execute(operator);
             statusLabel.setText(String.format("Successfully launched the bot to the channel #%s", channelName));
             saveChannelSettings(channelName);
 
@@ -203,6 +216,10 @@ public class GUIController implements Initializable {
 
     public Operator getOperator() {
         return operator;
+    }
+
+    public ExecutorService getExecutorService() {
+        return executorService;
     }
 
     public void exitApplication(ActionEvent actionEvent) {
@@ -363,7 +380,7 @@ public class GUIController implements Initializable {
         String value = spamDurationTextField.getText();
         if (!StringUtils.isContainingOnlyNumbers(value)){
             spamDurationTextField.setText("");
-            spamDurationTextField.setPromptText("Only numbers are allowed here");
+            showAlert("Only numbers are allowed here");
             return;
         }
         operator.getBot().setDurationOfBan(Integer.valueOf(value));
@@ -373,17 +390,17 @@ public class GUIController implements Initializable {
         String viewerName = currencyViewerNameTextField.getText().toLowerCase();
         if (!StringUtils.isNumeric(currencyAmountLabelTextField.getText())){
             currencyAmountLabelTextField.clear();
-            currencyStatusLabel.setText("Amount must be numeric!");
+            showAlert("Amount must be numeric!");
             return;
         }
         int amount = Integer.parseInt(currencyAmountLabelTextField.getText());
         if (!Statistics.isAnActiveViewer(viewerName)){
             currencyViewerNameTextField.clear();
-            currencyStatusLabel.setText("Haven't found such user!");
+            showAlert("Haven't found such user!");
             return;
         }
         Statistics.increaseCoinsAmount(viewerName, amount);
-        currencyStatusLabel.setText(String.format("Viewer %s now has %d coins!", viewerName,
+        showAlert(String.format("Viewer %s now has %d coins!", viewerName,
          Statistics.getViewer(viewerName).getMoneyAmount()));
     }
 
@@ -391,32 +408,28 @@ public class GUIController implements Initializable {
         String viewerName = currencyViewerNameTextField.getText().toLowerCase();
         if (!StringUtils.isNumeric(currencyAmountLabelTextField.getText())){
             currencyAmountLabelTextField.clear();
-            currencyStatusLabel.setText("Amount must be numeric!");
+            showAlert("Amount must be numeric!");
             return;
         }
         int amount = Integer.parseInt(currencyAmountLabelTextField.getText());
         if (!Statistics.isAnActiveViewer(viewerName)){
             currencyViewerNameTextField.clear();
-            currencyStatusLabel.setText("Haven't found such user!");
+            showAlert("Haven't found such user!");
             return;
         }
         if (!Statistics.hasEnoughMoney(viewerName, amount)){
             currencyAmountLabelTextField.clear();
-            currencyStatusLabel.setText("Viewer " + viewerName + " doesn't have enough coins for that!");
+            showAlert("Viewer " + viewerName + " doesn't have enough coins for that!");
             return;
         }
         Statistics.decreaseCoinsAmount(viewerName, amount);
-        currencyStatusLabel.setText(String.format("Viewer %s now has %d coins!", viewerName,
+        showAlert(String.format("Viewer %s now has %d coins!", viewerName,
          Statistics.getViewer(viewerName).getMoneyAmount()));
     }
 
     public void startRaid(ActionEvent actionEvent) {
         if (EventHandler.isThereAnActiveRaid()){
-            Alert alert = new Alert(Alert.AlertType.ERROR);
-            alert.setTitle("Error!");
-            alert.setHeaderText(null);
-            alert.setContentText("You need to wait until the current raid finishes!");
-            alert.showAndWait();
+            showAlert("You must wait until the current raid finishes!");
             return;
         }
         String durationText = raidDurationTextField.getText();
@@ -425,12 +438,12 @@ public class GUIController implements Initializable {
         int percentage;
         if (!StringUtils.isNumeric(durationText)){
             raidDurationTextField.clear();
-            raidDurationTextField.setPromptText("Duration should be numeric!");
+            showAlert("Duration must be numeric!");
             return;
         }
         if (!StringUtils.isNumeric(percentageText)){
             raidPercentageTextField.clear();
-            raidPercentageTextField.setPromptText("Percentage should be numeric!");
+            showAlert("Percentage must be numeric!");
             return;
         }
 
@@ -439,7 +452,12 @@ public class GUIController implements Initializable {
 
         if (percentage > 100 || percentage <= 0){
             raidPercentageTextField.clear();
-            raidPercentageTextField.setPromptText("Percentage should be in between 0 and 100!");
+            showAlert("Percentage must be in between 0 and 100!");
+            return;
+        }
+
+        if (duration < 10){
+            showAlert("Duration must be more than 10!");
             return;
         }
 
@@ -448,31 +466,83 @@ public class GUIController implements Initializable {
 
     public void startPoll(ActionEvent actionEvent) {
         if (EventHandler.isThereAnActivePoll()){
-            Alert alert = new Alert(Alert.AlertType.ERROR);
-            alert.setTitle("Error!");
-            alert.setHeaderText(null);
-            alert.setContentText("You need to wait until current poll finishes!");
-            alert.showAndWait();
+            showAlert("You must wait until current poll finishes!");
             return;
         }
         List<String> answersList = new ArrayList<>(Arrays.asList(pollAnswersTextArea.getText().split("\n")));
         String question = pollQuestionTextField.getText();
         if (answersList.size() < 2){
             pollAnswersTextArea.clear();
-            pollAnswersTextArea.setPromptText("There should be 2 or more answers!");
+            showAlert("There must be 2 or more answers!");
             return;
         }
         if (!StringUtils.isNumeric(pollDurationTextField.getText())){
             pollDurationTextField.clear();
-            pollDurationTextField.setPromptText("Duration should be numeric!");
+            showAlert("Duration must be numeric!");
             return;
         }
         int duration = Integer.parseInt(pollDurationTextField.getText());
         if (duration < 10){
             pollDurationTextField.clear();
-            pollDurationTextField.setPromptText("Duration can't be less than 10!");
+            showAlert("Duration can't be less than 10!");
             return;
         }
         EventHandler.startNewPoll(operator.getBot(), answersList, question, duration);
+    }
+
+    public void startQuiz(ActionEvent actionEvent) {
+        if (EventHandler.isThereAnActiveQuiz()){
+            showAlert("You must wait until the current quiz is finished!");
+            return;
+        }
+        String duration = quizDurationTextField.getText();
+        String question = quizQuestionTextField.getText();
+        String answer = quizAnswerTextField.getText();
+        if (!StringUtils.isNumeric(duration)){
+            quizDurationTextField.clear();
+            showAlert("Duration must be numeric!");
+            return;
+        }
+
+        if (!StringUtils.isContainingOnlyDigitsAndLetter(question) || !StringUtils.isContainingOnlyDigitsAndLetter(answer)){
+            quizQuestionTextField.clear();
+            quizAnswerTextField.clear();
+            showAlert("Question and answer can contain only letters and numbers!");
+            return;
+        }
+
+        int durationInt = Integer.parseInt(duration);
+        if (durationInt < 10){
+            showAlert("Duration must be more than 10!");
+            return;
+        }
+        EventHandler.startNewQuiz(operator.getBot(), question, answer, durationInt);
+    }
+
+    public void showAlert(String message){
+        Alert alert = new Alert(Alert.AlertType.WARNING);
+        alert.setTitle("Warning!");
+        alert.setHeaderText(null);
+        alert.setContentText(message);
+        alert.showAndWait();
+    }
+
+    public void startRaffle(ActionEvent actionEvent) {
+        if (EventHandler.isThereAnActiveRaffle()){
+            showAlert("You must wait until the current raffle is finished!");
+            return;
+        }
+        String duration = raffleDurationTextField.getText();
+        if (!StringUtils.isNumeric(duration)){
+            raffleDurationTextField.clear();
+            showAlert("Duration must be numeric!");
+        }
+
+        int durationInt = Integer.parseInt(duration);
+        if (durationInt < 10){
+            showAlert("Duration must be not less than 10!");
+            return;
+        }
+        EventHandler.startNewRaffle(operator.getBot(), durationInt, raffleWinnerTextField);
     }
 }

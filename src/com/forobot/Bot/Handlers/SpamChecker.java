@@ -206,12 +206,13 @@ public class SpamChecker {
 
     public boolean containsVowels(String word){
         ArrayList<Character> vowels = new ArrayList<>();
-        vowels.add('A');
-        vowels.add('E');
-        vowels.add('I');
-        vowels.add('O');
-        vowels.add('U');
-        vowels.add('Y');
+        vowels.add('a');
+        vowels.add('e');
+        vowels.add('i');
+        vowels.add('o');
+        vowels.add('u');
+        vowels.add('y');
+        word = word.toLowerCase();
         for (int i = 0; i < word.length(); i++){
             if (vowels.contains(word.charAt(i))){
                 return true;
